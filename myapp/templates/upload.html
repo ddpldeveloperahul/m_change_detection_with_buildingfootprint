@@ -8,7 +8,7 @@
 /* ===== CHANGE DETECTION UPLOAD UI ===== */
 .upload-page {
     min-height: calc(100vh - 86px);
-    padding: 64px 18px;
+    padding: clamp(16px, 8vw, 64px) clamp(12px, 4vw, 18px);
     background:
         linear-gradient(135deg, rgba(5, 12, 27, 0.72), rgba(12, 30, 50, 0.86)),
         radial-gradient(circle at 18% 20%, rgba(0, 212, 255, 0.14), transparent 34%),
@@ -32,15 +32,15 @@
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
-    gap: 22px;
-    padding: 28px 34px;
+    gap: clamp(14px, 4vw, 22px);
+    padding: clamp(16px, 4vw, 28px) clamp(16px, 5vw, 34px);
     background: linear-gradient(135deg, #f8fbff 0%, #eaf4f8 100%);
     border-bottom: 1px solid #d8e5ee;
 }
 
 .company-logo-box {
-    width: 92px;
-    height: 74px;
+    width: clamp(70px, 12vw, 92px);
+    height: clamp(56px, 10vw, 74px);
     border-radius: 18px;
     background: white;
     display: flex;
@@ -50,22 +50,22 @@
 }
 
 .company-logo {
-    width: 76px;
-    height: 62px;
+    width: clamp(56px, 10vw, 76px);
+    height: clamp(44px, 8vw, 62px);
     object-fit: contain;
 }
 
 .brand-title {
     margin: 0;
     color: #172033;
-    font-size: 30px;
+    font-size: clamp(22px, 5vw, 30px);
     font-weight: 800;
 }
 
 .brand-subtitle {
     margin: 6px 0 0;
     color: #526174;
-    font-size: 14px;
+    font-size: clamp(13px, 3vw, 14px);
     font-weight: 600;
 }
 
@@ -74,37 +74,37 @@
     background: #d8f7ee;
     border: 1px solid #9ce5cf;
     border-radius: 999px;
-    padding: 9px 14px;
-    font-size: 12px;
+    padding: clamp(6px, 2vw, 9px) clamp(10px, 3vw, 14px);
+    font-size: clamp(11px, 2.5vw, 12px);
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.8px;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .upload-body {
-    padding: 34px;
+    padding: clamp(16px, 4vw, 34px);
 }
 
 .section-heading {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 18px;
-    margin-bottom: 22px;
+    gap: clamp(12px, 3vw, 18px);
+    margin-bottom: clamp(14px, 3vw, 22px);
 }
 
 .section-heading h2 {
     margin: 0;
     color: #172033;
-    font-size: 22px;
+    font-size: clamp(20px, 4vw, 22px);
     font-weight: 800;
 }
 
 .section-heading p {
     margin: 4px 0 0;
     color: #5c6878;
-    font-size: 14px;
+    font-size: clamp(12px, 3vw, 14px);
 }
 
 .format-note {
@@ -112,23 +112,27 @@
     background: #e7f8ff;
     border: 1px solid #b9eafa;
     border-radius: 12px;
-    padding: 10px 12px;
-    font-size: 12px;
+    padding: clamp(6px, 2vw, 10px) clamp(10px, 2.5vw, 12px);
+    font-size: clamp(11px, 2.5vw, 12px);
     font-weight: 700;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 22px;
 }
 
+.grid > div {
+    min-width: 0;
+}
+
 .dropzone {
-    min-height: 220px;
+    min-height: clamp(180px, 50vw, 220px);
     border: 2px dashed #b9c9d8;
     border-radius: 18px;
-    padding: 28px;
+    padding: clamp(16px, 4vw, 28px);
     cursor: pointer;
     transition: all 0.4s ease;
     position: relative;
@@ -166,19 +170,19 @@
 .zone-top {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: clamp(12px, 3vw, 16px);
 }
 
 .zone-icon {
-    width: 54px;
-    height: 54px;
+    width: clamp(44px, 10vw, 54px);
+    height: clamp(44px, 10vw, 54px);
     border-radius: 16px;
     color: white;
     background: linear-gradient(135deg, #1677ff, #00b98c);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 22px;
+    font-size: clamp(18px, 4vw, 22px);
     font-weight: 900;
     box-shadow: 0 12px 28px rgba(22, 119, 255, 0.24);
     flex: 0 0 auto;
@@ -187,33 +191,33 @@
 .dropzone h3 {
     margin: 0;
     color: #1d2733;
-    font-size: 24px;
+    font-size: clamp(18px, 4vw, 24px);
     font-weight: 800;
 }
 
 .dropzone p {
     margin: 6px 0 0;
     color: #5d6877;
-    font-size: 14px;
+    font-size: clamp(12px, 3vw, 14px);
     font-weight: 600;
 }
 
 .zone-footer {
-    margin-top: 28px;
+    margin-top: clamp(16px, 4vw, 28px);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: clamp(8px, 2vw, 12px);
     border-top: 1px solid #dce7ef;
-    padding-top: 18px;
+    padding-top: clamp(12px, 3vw, 18px);
 }
 
 .browse-pill {
     color: #0c4a6e;
     background: #e8f6ff;
     border-radius: 999px;
-    padding: 8px 12px;
-    font-size: 12px;
+    padding: clamp(6px, 2vw, 8px) clamp(10px, 2.5vw, 12px);
+    font-size: clamp(11px, 2.5vw, 12px);
     font-weight: 800;
     white-space: nowrap;
 }
@@ -221,7 +225,7 @@
 .file-name {
     min-width: 0;
     color: #0c4a6e;
-    font-size: 13px;
+    font-size: clamp(12px, 2.5vw, 13px);
     font-weight: 700;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -229,14 +233,14 @@
 }
 
 .upload-btn {
-    margin-top: 30px;
+    margin-top: clamp(20px, 5vw, 30px);
     width: 100%;
-    padding: 16px;
+    padding: clamp(14px, 3vw, 16px);
     border-radius: 16px;
     border: none;
     background: linear-gradient(135deg, #1677ff 0%, #0aa7d8 48%, #00b98c 100%);
     color: white;
-    font-size: 16px;
+    font-size: clamp(14px, 3vw, 16px);
     font-weight: 800;
     cursor: pointer;
     transition: 0.3s;
@@ -249,12 +253,12 @@
 }
 
 .progress-wrapper {
-    margin-top: 25px;
+    margin-top: clamp(16px, 4vw, 25px);
     display: none;
     background: #eef5f8;
     border: 1px solid #d5e4ec;
     border-radius: 16px;
-    padding: 16px;
+    padding: clamp(12px, 3vw, 16px);
 }
 
 .progress-bar {
@@ -277,36 +281,193 @@
     color: #244154;
     font-weight: 700;
     text-align: center;
+    font-size: clamp(13px, 2.5vw, 15px);
 }
 
-@media (max-width: 820px) {
+/* ===== MOBILE FIRST RESPONSIVE DESIGN ===== */
+/* Extra Small Devices (320px - 480px) */
+@media (max-width: 480px) {
     .upload-page {
-        padding: 28px 14px;
+        padding: clamp(16px, 4vw, 28px);
+        min-height: calc(100vh - 80px);
     }
 
-    .brand-panel,
+    .upload-card {
+        border-radius: 16px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .brand-panel {
+        grid-template-columns: 1fr;
+        gap: clamp(12px, 3vw, 16px);
+        padding: clamp(16px, 4vw, 24px);
+    }
+
+    .company-logo-box {
+        width: 70px;
+        height: 56px;
+        margin: 0 auto;
+    }
+
+    .company-logo {
+        width: 56px;
+        height: 44px;
+    }
+
+    .brand-panel > div:nth-child(2) {
+        text-align: center;
+        width: 100%;
+    }
+
+    .brand-chip {
+        justify-self: center;
+        display: inline-block;
+    }
+
+    .upload-body {
+        padding: clamp(16px, 4vw, 24px);
+    }
+
     .section-heading {
-        display: flex;
         flex-direction: column;
-        align-items: flex-start;
+        gap: 12px;
     }
 
-    .brand-title {
-        font-size: 24px;
+    .section-heading > div {
+        width: 100%;
     }
 
-    .brand-chip,
     .format-note {
-        white-space: normal;
+        width: 100%;
+        text-align: center;
     }
 
     .grid {
         grid-template-columns: 1fr;
+        gap: clamp(14px, 3vw, 18px);
     }
 
-    .upload-body,
+    .dropzone {
+        min-height: 160px;
+        padding: clamp(12px, 3vw, 20px);
+        border-radius: 14px;
+    }
+
+    .zone-footer {
+        flex-direction: column;
+        gap: 10px;
+        margin-top: clamp(16px, 3vw, 20px);
+        padding-top: 14px;
+    }
+
+    .browse-pill {
+        padding: 7px 10px;
+        font-size: 11px;
+        align-self: center;
+    }
+
+    .file-name {
+        text-align: center;
+        font-size: 11px;
+    }
+}
+
+/* Small and tablet layouts */
+@media (min-width: 481px) and (max-width: 960px) {
+    .upload-page {
+        padding: clamp(18px, 4vw, 32px) clamp(10px, 3vw, 18px);
+    }
+
     .brand-panel {
-        padding: 24px;
+        grid-template-columns: auto 1fr;
+        gap: 16px;
+        padding: clamp(20px, 4vw, 28px);
+    }
+
+    .brand-chip {
+        grid-column: 2;
+        justify-self: start;
+    }
+
+    .company-logo-box {
+        width: 80px;
+        height: 65px;
+    }
+
+    .company-logo {
+        width: 65px;
+        height: 52px;
+    }
+
+    .upload-body {
+        padding: clamp(20px, 4vw, 28px);
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+        gap: clamp(14px, 3vw, 18px);
+    }
+
+    .dropzone {
+        min-height: 170px;
+        padding: clamp(16px, 3vw, 24px);
+    }
+}
+
+/* Large Screens (961px and above) */
+@media (min-width: 961px) {
+    .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 22px;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .dropzone {
+        padding: clamp(16px, 4vw, 28px);
+    }
+
+    .dropzone:active {
+        border-color: #00b98c;
+        background: #ecfff9;
+        transform: scale(0.98);
+    }
+
+    .upload-btn {
+        padding: clamp(16px, 4vw, 18px);
+        min-height: 48px;
+    }
+
+    .upload-btn:active {
+        transform: scale(0.96);
+        background: linear-gradient(135deg, #1262d4 0%, #0894c8 48%, #00a37a 100%);
+    }
+}
+
+/* Very small devices - extra padding reduction */
+@media (max-width: 360px) {
+    .upload-page {
+        padding: 12px 8px;
+    }
+
+    .brand-panel {
+        padding: 12px 14px;
+        gap: 10px;
+    }
+
+    .upload-body {
+        padding: 12px;
+    }
+
+    .upload-container {
+        max-width: 100%;
+    }
+
+    .dropzone::before {
+        font-size: 10px;
+        top: 10px;
+        right: 12px;
     }
 }
 
@@ -317,8 +478,8 @@
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(22, 119, 255, 0.16);
     border-radius: 16px;
-    padding: 16px 20px;
-    margin-top: 14px;
+    padding: clamp(12px, 3vw, 16px) clamp(14px, 3vw, 20px);
+    margin-top: clamp(10px, 2vw, 14px);
     box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     animation: slideInUp 0.5s ease-out;
@@ -339,11 +500,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: clamp(6px, 2vw, 8px);
 }
 
 .tracker-title {
-    font-size: 13px;
+    font-size: clamp(11px, 2.5vw, 13px);
     font-weight: 750;
     color: #1e293b;
     text-transform: uppercase;
@@ -351,17 +512,17 @@
 }
 
 .tracker-pct {
-    font-size: 14px;
+    font-size: clamp(12px, 2.5vw, 14px);
     font-weight: 800;
     color: #1677ff;
 }
 
 .tracker-bar {
     background: rgba(15, 23, 42, 0.06);
-    height: 8px;
+    height: clamp(6px, 1.5vw, 8px);
     border-radius: 10px;
     overflow: hidden;
-    margin-bottom: 8px;
+    margin-bottom: clamp(6px, 2vw, 8px);
     position: relative;
 }
 
@@ -374,12 +535,12 @@
 }
 
 .tracker-status {
-    font-size: 12px;
+    font-size: clamp(11px, 2.5vw, 12px);
     font-weight: 600;
     color: #57606a;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: clamp(6px, 2vw, 8px);
 }
 
 /* Spinner and pulsing animations */
@@ -460,7 +621,7 @@
                         <!-- Old Image Building Footprint Tracker -->
                         <div id="footprint-tracker-1" class="footprint-tracker" style="display: none;">
                             <div class="tracker-header">
-                                <span class="tracker-title">Building Footprint Generation</span>
+                                <span class="tracker-title">Uploading Old Image</span>
                                 <span id="tracker-pct-1" class="tracker-pct">0%</span>
                             </div>
                             <div class="tracker-bar">
@@ -488,7 +649,7 @@
                         <!-- New Image Building Footprint Tracker -->
                         <div id="footprint-tracker-2" class="footprint-tracker" style="display: none;">
                             <div class="tracker-header">
-                                <span class="tracker-title">Building Footprint Generation</span>
+                                <span class="tracker-title">Uploading New Image</span>
                                 <span id="tracker-pct-2" class="tracker-pct">0%</span>
                             </div>
                             <div class="tracker-bar">
@@ -651,20 +812,36 @@ async function processFootprintFile(file, imageType, index) {
 
         // Step 2: Trigger Celery footprint detection task
         console.log(`[${imageType}] Starting footprint detection with job_id: ${globJobId}`);
-        const response = await fetch('/start-footprint-detection/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRF()
-            },
-            body: JSON.stringify({
-                file_path: file_path,
-                image_type: imageType,
-                job_id: globJobId
-            })
-        });
+        
+        let response;
+        try {
+            response = await fetch('/start-footprint-detection/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRF()
+                },
+                body: JSON.stringify({
+                    file_path: file_path,
+                    image_type: imageType,
+                    job_id: globJobId
+                })
+            });
+        } catch (fetchError) {
+            console.error(`[${imageType}] Fetch error:`, fetchError);
+            throw new Error(`Network error: ${fetchError.message}. Check server connection.`);
+        }
 
-        const result = await response.json();
+        let result;
+        try {
+            result = await response.json();
+        } catch (parseError) {
+            console.error(`[${imageType}] JSON parse error:`, parseError);
+            console.error(`[${imageType}] Response status:`, response.status);
+            console.error(`[${imageType}] Response text:`, await response.text());
+            throw new Error(`Invalid server response. Status: ${response.status}`);
+        }
+        
         console.log(`[${imageType}] Footprint response:`, result);
         
         if (!response.ok) {
@@ -693,8 +870,19 @@ function wait(ms) {
 async function waitForFootprintComplete(imageType, index) {
     while (globJobId) {
         try {
-            const response = await fetch(`/footprint-status/${globJobId}/`);
-            const data = await response.json();
+            let response;
+            try {
+                response = await fetch(`/footprint-status/${globJobId}/`);
+            } catch (fetchErr) {
+                throw new Error(`Network error checking footprint status: ${fetchErr.message}`);
+            }
+            
+            let data;
+            try {
+                data = await response.json();
+            } catch (parseErr) {
+                throw new Error(`Server error: Invalid status response (Status: ${response.status})`);
+            }
 
             if (!response.ok) {
                 throw new Error(data.error || 'Status check failed');
@@ -794,9 +982,9 @@ function updateSubmitButtonState() {
         if (!selectedOldFile || !selectedNewFile) {
             btn.innerHTML = "Select Old & New Images";
         } else if (!globOldPath || !globNewPath) {
-            btn.innerHTML = "Upload Files....";
+            btn.innerHTML = "Upload Files......";
         } else {
-            btn.innerHTML = "uploading files....";
+            btn.innerHTML = "Upload Files......";
         }
     }
 }
@@ -817,20 +1005,31 @@ async function startUpload() {
 
         console.log("Kicking off main change detection processing with job_id:", globJobId);
 
-        const response = await fetch('/start-processing/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRF()
-            },
-            body: JSON.stringify({
-                file1: globOldPath,
-                file2: globNewPath,
-                job_id: globJobId
-            })
-        });
+        let response;
+        try {
+            response = await fetch('/start-processing/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRF()
+                },
+                body: JSON.stringify({
+                    file1: globOldPath,
+                    file2: globNewPath,
+                    job_id: globJobId
+                })
+            });
+        } catch (fetchErr) {
+            throw new Error(`Network error starting processing: ${fetchErr.message}`);
+        }
 
-        const result = await response.json();
+        let result;
+        try {
+            result = await response.json();
+        } catch (parseErr) {
+            throw new Error(`Server error: Invalid processing response (Status: ${response.status})`);
+        }
+
         console.log("Start processing response:", result);
 
         if (!response.ok) {
@@ -854,16 +1053,27 @@ async function startUpload() {
 }
 
 async function checkProcessingAvailability() {
-    const response = await fetch('/processing-availability/', {
-        method: 'GET',
-        headers: {
-            'X-CSRFToken': getCSRF()
-        }
-    });
+    try {
+        const response = await fetch('/processing-availability/', {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': getCSRF()
+            }
+        });
 
-    const data = await response.json();
-    if (!response.ok || data.available === false) {
-        throw new Error(data.error || 'Server busy. Please wait until current processing finishes.');
+        let data;
+        try {
+            data = await response.json();
+        } catch (parseError) {
+            throw new Error(`Server error: Invalid response (Status: ${response.status})`);
+        }
+        
+        if (!response.ok || data.available === false) {
+            throw new Error(data.error || 'Server busy. Please wait until current processing finishes.');
+        }
+    } catch (error) {
+        console.error('checkProcessingAvailability error:', error);
+        throw error;
     }
 }
 
@@ -874,17 +1084,29 @@ async function simpleUpload(file) {
     try {
         console.log(`Uploading file: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
         
-        const response = await fetch('/upload-chunk/', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': getCSRF()
-            }
-        });
+        let response;
+        try {
+            response = await fetch('/upload-chunk/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCSRF()
+                }
+            });
+        } catch (fetchErr) {
+            throw new Error(`Network error uploading file: ${fetchErr.message}`);
+        }
 
         console.log(`Upload response status: ${response.status}`);
         
-        const data = await response.json();
+        let data;
+        try {
+            data = await response.json();
+        } catch (parseErr) {
+            console.error('Failed to parse upload response:', parseErr);
+            throw new Error(`Server error: Invalid upload response (Status: ${response.status})`);
+        }
+        
         console.log(`Upload response data:`, data);
         
         if (!response.ok) {

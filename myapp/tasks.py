@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 import os, zipfile, shutil
 
 from .utils import process_change, process_spatial_join, process_new_footprint_detection
-from .footprint_detection import generate_building_footprint
+# Defer torch import to avoid DLL issues at startup
 from .models import ChangeResult, SpatialJoinResult
 
 @shared_task(bind=True)
@@ -260,6 +260,7 @@ def run_new_footprint_detection(old_zip_path, new_zip_path, user_id):
 
 @shared_task
 def process_building_footprints(change_result_id):
+    from .footprint_detection import generate_building_footprint
 
     obj = ChangeResult.objects.get(id=change_result_id)
 
@@ -329,6 +330,7 @@ def process_building_footprints(change_result_id):
 def process_single_footprint(self, file_path, job_id, image_type):
     from .models import ChangeResult
     from django.core.files import File
+    from .footprint_detection import generate_building_footprint
 
     job = ChangeResult.objects.get(id=job_id)
 

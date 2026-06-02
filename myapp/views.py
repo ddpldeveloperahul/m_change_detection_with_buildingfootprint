@@ -36,11 +36,9 @@ import pandas as pd
 from urllib.parse import urlencode
 from celery.result import EagerResult # type: ignore
 from django.contrib.sessions.models import Session
-from .tasks import run_change_detection
 from .file_handler import save_large_file
 from django.http import FileResponse
 import zipfile
-from .tasks import run_spatial_join, run_new_footprint_detection
 
 def media_url_from_path(file_path):
     return settings.MEDIA_URL + os.path.relpath(file_path, settings.MEDIA_ROOT).replace("\\", "/")
@@ -303,6 +301,7 @@ def get_active_change_job():
 def upload_images(request):
 
     if request.method == 'POST':
+        from .tasks import run_change_detection
 
         user = request.user if request.user.is_authenticated else User.objects.first()
 
@@ -506,6 +505,8 @@ def download_shapefile(request):
 
 
 def spatial_join_view(request):
+    from .tasks import run_spatial_join, run_new_footprint_detection
+    
     prefilled_file = request.GET.get('file') or request.POST.get('prefilled_file')
     prefilled_path = resolve_media_file_path(prefilled_file)
     file_name = os.path.basename(prefilled_path) if prefilled_path else None
@@ -650,6 +651,8 @@ def signup_page(request):
 
 @csrf_exempt
 def start_processing(request):
+    from .tasks import run_change_detection
+    
     try:
         if not request.body:
             return JsonResponse({"error": "Request body is empty"}, status=400)
