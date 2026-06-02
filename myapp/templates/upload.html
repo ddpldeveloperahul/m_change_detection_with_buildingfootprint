@@ -744,7 +744,7 @@ function updateTracker(index, statusStr, progressVal) {
         fill.style.width = "100%";
         pct.innerHTML = "100%";
         fill.style.background = "#00b98c";
-        statusText.innerHTML = `<span style="color: #00b98c; font-weight: 700;">✓ Footprint generated successfully! ✨</span>`;
+        statusText.innerHTML = `<span style="color: #00b98c; font-weight: 700;">✓ upload successfully! ✨</span>`;
     } else if (statusStr === "failed") {
         fill.style.width = "0%";
         pct.innerHTML = "Failed";
@@ -794,9 +794,9 @@ function updateSubmitButtonState() {
         if (!selectedOldFile || !selectedNewFile) {
             btn.innerHTML = "Select Old & New Images";
         } else if (!globOldPath || !globNewPath) {
-            btn.innerHTML = "Generating Building Footprints...";
+            btn.innerHTML = "Upload Files....";
         } else {
-            btn.innerHTML = "Generating Building Footprints...";
+            btn.innerHTML = "uploading files....";
         }
     }
 }
