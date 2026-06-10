@@ -313,3 +313,264 @@ SIMPLE_JWT = {
 
 RAZORPAY_KEY_ID = "rzp_test_SYApqStsJemcFe"
 RAZORPAY_KEY_SECRET = "ZcNVeUvTQEFmfezvS18NW1Wu"
+
+
+
+
+"""
+Django settings for my_gis_project project.
+Production Ready Settings
+"""
+
+# from pathlib import Path
+# import os
+# import socket
+# from datetime import timedelta
+
+# # ============================================
+# # BASE DIRECTORY
+# # ============================================
+
+# BASE_DIR = Path(__file__).resolve().parent.parent
+
+# # ============================================
+# # SECURITY
+# # ============================================
+
+# SECRET_KEY = "django-insecure-=rx653^k0%8l_pkro!eqjt%dc%w!9wjusny6o4(&6!h0@$u@ot"
+
+# DEBUG = True
+
+# ALLOWED_HOSTS = [
+#     "*",
+#     "localhost",
+#     "127.0.0.1",
+#     "0.0.0.0",
+#     "buildingdetection.drdesigntech.com",
+# ]
+
+# CSRF_TRUSTED_ORIGINS = [
+#     "https://buildingdetection.drdesigntech.com",
+# ]
+
+# # ============================================
+# # INSTALLED APPS
+# # ============================================
+
+# INSTALLED_APPS = [
+#     "django.contrib.admin",
+#     "django.contrib.auth",
+#     "django.contrib.contenttypes",
+#     "django.contrib.sessions",
+#     "django.contrib.messages",
+#     "django.contrib.staticfiles",
+
+#     "rest_framework",
+
+#     "myapp",
+# ]
+
+# # ============================================
+# # MIDDLEWARE
+# # ============================================
+
+# MIDDLEWARE = [
+#     "django.middleware.security.SecurityMiddleware",
+#     "django.contrib.sessions.middleware.SessionMiddleware",
+#     "django.middleware.common.CommonMiddleware",
+#     "django.middleware.csrf.CsrfViewMiddleware",
+#     "django.contrib.auth.middleware.AuthenticationMiddleware",
+#     "django.contrib.messages.middleware.MessageMiddleware",
+#     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+# ]
+
+# # ============================================
+# # URLS
+# # ============================================
+
+# ROOT_URLCONF = "my_gis_project.urls"
+
+# # ============================================
+# # TEMPLATES
+# # ============================================
+
+# TEMPLATES = [
+#     {
+#         "BACKEND": "django.template.backends.django.DjangoTemplates",
+#         "DIRS": [os.path.join(BASE_DIR, "myapp", "templates")],
+#         "APP_DIRS": True,
+#         "OPTIONS": {
+#             "context_processors": [
+#                 "django.template.context_processors.request",
+#                 "django.contrib.auth.context_processors.auth",
+#                 "django.contrib.messages.context_processors.messages",
+#             ],
+#         },
+#     },
+# ]
+
+# # ============================================
+# # WSGI
+# # ============================================
+
+# WSGI_APPLICATION = "my_gis_project.wsgi.application"
+
+# # ============================================
+# # DATABASE
+# # ============================================
+
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
+
+# # ============================================
+# # PASSWORD VALIDATION
+# # ============================================
+
+# AUTH_PASSWORD_VALIDATORS = [
+#     {
+#         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+#     },
+#     {
+#         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+#     },
+#     {
+#         "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+#     },
+#     {
+#         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+#     },
+# ]
+
+# # ============================================
+# # INTERNATIONALIZATION
+# # ============================================
+
+# LANGUAGE_CODE = "en-us"
+
+# TIME_ZONE = "Asia/Kolkata"
+
+# USE_I18N = True
+
+# USE_TZ = True
+
+# # ============================================
+# # STATIC FILES
+# # ============================================
+
+# STATIC_URL = "/static/"
+
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, "static")
+# ]
+
+# STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
+# # ============================================
+# # MEDIA FILES
+# # ============================================
+
+# MEDIA_URL = "/media/"
+
+# MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+# # ============================================
+# # DEFAULT PRIMARY KEY
+# # ============================================
+
+# DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# # ============================================
+# # LARGE FILE UPLOAD SETTINGS
+# # ============================================
+
+# # Support 20GB uploads
+# DATA_UPLOAD_MAX_MEMORY_SIZE = 21474836480
+# FILE_UPLOAD_MAX_MEMORY_SIZE = 0
+
+# # Stream uploads directly to disk
+# FILE_UPLOAD_HANDLERS = [
+#     "django.core.files.uploadhandler.TemporaryFileUploadHandler",
+# ]
+
+# # Temp upload folder
+# FILE_UPLOAD_TEMP_DIR = os.path.join(BASE_DIR, "temp_uploads")
+# os.makedirs(FILE_UPLOAD_TEMP_DIR, exist_ok=True)
+# # Upload chunk size
+# FILE_UPLOAD_CHUNK_SIZE = 2621440
+
+# # Permissions
+# FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
+# FILE_UPLOAD_PERMISSIONS = 0o644
+
+# # Socket timeout
+# socket.setdefaulttimeout(3600)
+
+# # Chunk upload support
+# CHUNKED_UPLOAD_MAX_BYTES = 20 * 1024 * 1024 * 1024
+# CHUNKED_UPLOAD_EXPIRATION_DELTA = 3600
+
+# # ============================================
+# # REST FRAMEWORK
+# # ============================================
+
+# REST_FRAMEWORK = {
+#     "DEFAULT_AUTHENTICATION_CLASSES": (
+#         "rest_framework_simplejwt.authentication.JWTAuthentication",
+#     ),
+# }
+
+# # ============================================
+# # JWT
+# # ============================================
+
+# SIMPLE_JWT = {
+#     "ACCESS_TOKEN_LIFETIME": timedelta(days=50),
+# }
+
+# # ============================================
+# # CELERY
+# # ============================================
+
+# CELERY_BROKER_URL = os.getenv(
+#     "CELERY_BROKER_URL",
+#     "memory://"
+# )
+
+# CELERY_RESULT_BACKEND = os.getenv(
+#     "CELERY_RESULT_BACKEND",
+#     "cache+memory://"
+# )
+
+# CELERY_ACCEPT_CONTENT = ["json"]
+
+# CELERY_TASK_SERIALIZER = "json"
+
+# CELERY_RESULT_SERIALIZER = "json"
+
+# CELERY_TIMEZONE = "Asia/Kolkata"
+
+# CELERY_TASK_ALWAYS_EAGER = True
+
+# CELERY_TASK_EAGER_PROPAGATES = True
+
+# CELERY_TASK_STORE_EAGER_RESULT = True
+
+# CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = False
+
+# # Large image processing timeout
+# CELERY_TASK_TIME_LIMIT = 3600
+
+# CELERY_TASK_SOFT_TIME_LIMIT = 3500
+
+# # ============================================
+# # OPTIONAL KEYS
+# # ============================================
+
+# RAZORPAY_KEY_ID = "rzp_test_SYApqStsJemcFe"
+
+# RAZORPAY_KEY_SECRET = "ZcNVeUvTQEFmfezvS18NW1Wu"
+

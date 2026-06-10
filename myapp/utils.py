@@ -732,6 +732,45 @@ if __name__ == "__main__":
 
 import geopandas as gpd
 
+def make_new_building_ids(count, existing_ids):
+    existing = {str(value) for value in existing_ids if pd.notna(value)}
+    generated = []
+    next_number = 1
+
+    while len(generated) < count:
+        candidate = f"NEW_{next_number:06d}"
+        next_number += 1
+        if candidate in existing:
+            continue
+        generated.append(candidate)
+        existing.add(candidate)
+
+    return generated
+
+
+def fill_missing_ids(series, prefix, existing_ids=None):
+    existing = {str(value) for value in (existing_ids or []) if pd.notna(value) and str(value).strip()}
+    values = []
+    next_number = 1
+
+    for value in series:
+        if pd.notna(value) and str(value).strip():
+            value = str(value).strip()
+            values.append(value)
+            existing.add(value)
+            continue
+
+        while True:
+            candidate = f"{prefix}_{next_number:06d}"
+            next_number += 1
+            if candidate not in existing:
+                values.append(candidate)
+                existing.add(candidate)
+                break
+
+    return values
+
+
 def process_spatial_join(main_path, change_path, output_dir):
 
     os.makedirs(output_dir, exist_ok=True)
@@ -801,16 +840,24 @@ def process_spatial_join(main_path, change_path, output_dir):
     # =========================
     # FIND ID COLUMN (MAIN)
     # =========================
-    possible_cols = ['Id', 'id', 'ID', 'fid', 'FID', 'objectid', 'OBJECTID']
+    possible_cols = [
+        'OBJECT_ID', 'OBJECTID', 'objectid', 'ObjectID', 'FID', 'fid',
+        'Id', 'id', 'ID',
+        'House_No', 'HOUSE_NO', 'house_no', 'HouseNo', 'HOUSEID', 'House_ID',
+        'Building_I', 'BUILDINGID', 'BuildingID', 'Bldg_ID', 'BLDG_ID',
+    ]
 
     main_id_col = None
     for col in possible_cols:
-        if col in main.columns:
+        if col in main.columns and main[col].astype(str).str.strip().ne('').any():
             main_id_col = col
             break
 
     if main_id_col is None:
-        raise Exception(f"No ID column found in MAIN. Columns: {list(main.columns)}")
+        main_id_col = 'BUILDING_ID'
+        main[main_id_col] = fill_missing_ids([None] * len(main), 'BLD')
+    else:
+        main[main_id_col] = fill_missing_ids(main[main_id_col], 'BLD')
 
     # =========================
     # REMOVE SMALL NOISE (IMPORTANT)
@@ -886,16 +933,10 @@ def process_spatial_join(main_path, change_path, output_dir):
 
     # =========================
     # DOWNLOAD SHAPEFILE
-    # Keep the change-detection shapefile geometry/attributes, and attach
-    # the intersecting land ID so the downloaded ZIP matches the first page
-    # change layer with parcel/building ID information added.
+    # Keep only change-detection polygons. Existing building changes keep the
+    # old/main building ID; unmatched polygons are treated as new construction.
     # =========================
-    change_export = change_original.copy()
-    change_for_id = change_export
-    if main.crs != change_export.crs:
-        change_for_id = change_export.to_crs(main.crs)
-
-    change_for_id = change_for_id.copy()
+    change_for_id = change.copy()
     change_for_id['_chg_idx'] = change_for_id.index
 
     matches = gpd.sjoin(
@@ -906,6 +947,8 @@ def process_spatial_join(main_path, change_path, output_dir):
     )
 
     land_ids = {}
+    change_percents = {}
+    unmatched_change_idxs = set(change_for_id['_chg_idx'].tolist())
     valid_matches = matches[matches['index_right'].notna()].copy()
     if not valid_matches.empty:
         valid_matches['intersection_area'] = valid_matches.apply(
@@ -914,14 +957,35 @@ def process_spatial_join(main_path, change_path, output_dir):
             ).area,
             axis=1
         )
+        valid_matches = valid_matches[valid_matches['intersection_area'] > 0].copy()
+
+    if not valid_matches.empty:
         best_matches = valid_matches.sort_values('intersection_area').drop_duplicates('_chg_idx', keep='last')
         land_ids = best_matches.set_index('_chg_idx')[main_id_col].to_dict()
+        best_matches['_main_area'] = best_matches['index_right'].apply(
+            lambda idx: main.loc[int(idx)].geometry.area
+        )
+        best_matches['_change_percent'] = (
+            best_matches['intersection_area'] / best_matches['_main_area']
+        ).replace([np.inf, -np.inf], 0).fillna(0).clip(upper=1.0)
+        change_percents = best_matches.set_index('_chg_idx')['_change_percent'].to_dict()
+        unmatched_change_idxs = unmatched_change_idxs - set(land_ids.keys())
 
-    change_export['LAND_ID'] = change_export.index.map(land_ids)
-    change_export['CHANGED'] = 'YES'
+    final_export = change_for_id.drop(columns=['_chg_idx']).copy()
+    final_export['LAND_ID'] = change_for_id['_chg_idx'].map(land_ids)
+    new_mask = final_export['LAND_ID'].isna()
+    if new_mask.any():
+        new_ids = make_new_building_ids(int(new_mask.sum()), main[main_id_col].tolist())
+        final_export.loc[new_mask, 'LAND_ID'] = new_ids
 
-    export_cols = [col for col in ['id', 'class', 'value'] if col in change_export.columns]
-    final_export = change_export[export_cols + ['LAND_ID', 'CHANGED', 'geometry']].copy()
+    final_export['CHANGE'] = 'YES'
+    final_export.loc[new_mask, 'CHANGE'] = 'new construction'
+    final_export['CHG_FLAG'] = 1
+    final_export['CHG_PCT'] = change_for_id['_chg_idx'].map(change_percents).fillna(1.0).astype(float)
+
+    keep_cols = [col for col in ['id', 'class', 'value', 'LAND_ID', 'CHANGE', 'CHG_FLAG', 'CHG_PCT'] if col in final_export.columns]
+    final_export = final_export[keep_cols + ['geometry']].copy()
+    final_export = gpd.GeoDataFrame(final_export, geometry='geometry', crs=main.crs)
 
     # =========================
     # SAVE SHAPEFILE
@@ -931,24 +995,34 @@ def process_spatial_join(main_path, change_path, output_dir):
     # =========================
     # SAVE EXCEL
     # =========================
-    excel_df = final.copy()
+    changed_excel_df = pd.DataFrame(final_export.drop(columns='geometry').copy())
+    changed_excel_df['changed'] = changed_excel_df['CHANGE']
+    changed_excel_df['geometry'] = final_export.geometry.apply(lambda geom: geom.wkt if geom else None).values
 
-    excel_df['geometry'] = excel_df['geometry'].apply(
-        lambda g: g.wkt if g else None
-    )
-    excel_df['changed'] = final['CHANGED']
+    unchanged = final[~final['changed_flag']].copy()
+    unchanged_excel_df = pd.DataFrame({
+        'LAND_ID': unchanged[main_id_col].values,
+        'CHANGE': ['NO'] * len(unchanged),
+        'CHG_FLAG': [0] * len(unchanged),
+        'CHG_PCT': unchanged['change_percent'].fillna(0).astype(float).values,
+        'changed': ['NO'] * len(unchanged),
+        'geometry': unchanged.geometry.apply(lambda geom: geom.wkt if geom else None).values,
+    })
+
+    excel_df = pd.concat([changed_excel_df, unchanged_excel_df], ignore_index=True, sort=False)
 
     with pd.ExcelWriter(excel_output) as writer:
         excel_df.to_excel(writer, sheet_name='All Data', index=False)
         excel_df[excel_df['changed'] == 'YES'].to_excel(writer, sheet_name='Changed', index=False)
+        excel_df[excel_df['changed'] == 'new construction'].to_excel(writer, sheet_name='New Construction', index=False)
         excel_df[excel_df['changed'] == 'NO'].to_excel(writer, sheet_name='Unchanged', index=False)
 
     # =========================
     # STATS
     # =========================
-    total = len(final)
-    changed = int(final['changed_flag'].sum())
-    unchanged = total - changed
+    changed = len(changed_excel_df)
+    unchanged = len(unchanged_excel_df)
+    total = len(excel_df)
 
     return {
         "total": total,

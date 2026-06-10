@@ -4,13 +4,8 @@ from django.conf import settings
 from django.urls import reverse
 from matplotlib import image
 from requests import request
-import os
-import json
-import zipfile
-from .models import SpatialJoinResult,ChangeResult
 from django.contrib.auth.models import User
 from django.core.files import File
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.response import Response # type: ignore
 from rest_framework import status # type: ignore
@@ -18,7 +13,7 @@ from myapp.serializers import SignupSerializer, LoginSerializer, SpatialJoinResu
 from rest_framework.decorators import api_view # type: ignore
 from django.db import transaction
 from django.utils import timezone
-from django.http import JsonResponse
+import json
 from .models import *
 from datetime import timedelta
 from rest_framework_simplejwt.tokens import RefreshToken # type: ignore
@@ -425,11 +420,11 @@ def render_spatial_join_result(request, result_id):
         stats['total'] = len(excel_df)
 
         if 'changed' in excel_df.columns:
-            changed_values = excel_df['changed'].astype(str).str.upper()
-            stats['changed'] = int((changed_values == 'YES').sum())
+            changed_values = excel_df['changed'].astype(str).str.strip().str.upper()
+            stats['changed'] = int(((changed_values == 'YES') | (changed_values == 'NEW CONSTRUCTION')).sum())
             stats['unchanged'] = int((changed_values == 'NO').sum())
         elif 'is_new_building' in excel_df.columns:
-            changed_values = excel_df['is_new_building'].astype(str).str.upper()
+            changed_values = excel_df['is_new_building'].astype(str).str.strip().str.upper()
             stats['changed'] = int((changed_values == 'YES').sum())
             stats['unchanged'] = int((changed_values == 'NO').sum())
         elif 'changed_flag' in excel_df.columns:

@@ -252,6 +252,20 @@
     box-shadow: 0 18px 42px rgba(22, 119, 255, 0.4);
 }
 
+.upload-btn:disabled,
+.upload-btn.is-disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    filter: grayscale(35%);
+    box-shadow: none;
+}
+
+.upload-btn:disabled:hover,
+.upload-btn.is-disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
 .progress-wrapper {
     margin-top: clamp(16px, 4vw, 25px);
     display: none;
@@ -685,6 +699,7 @@ let newReady = false;
 let selectedOldFile = null;
 let selectedNewFile = null;
 let footprintWorkflowStarted = false;
+let processingStarted = false;
 
 // ===== DRAG DROP =====
 function setupDrop(zoneId, fileId, nameId) {
@@ -969,15 +984,26 @@ function setWaitingTracker(index, message) {
 function updateSubmitButtonState() {
     const btn = document.getElementById("btn");
 
+    if (processingStarted) {
+        btn.disabled = true;
+        btn.classList.add("is-disabled");
+        btn.style.opacity = "";
+        btn.style.cursor = "";
+        btn.innerHTML = "Processing...";
+        return;
+    }
+
+    btn.classList.remove("is-disabled");
+
     if (oldReady && newReady) {
         btn.disabled = false;
-        btn.style.opacity = "1";
-        btn.style.cursor = "pointer";
+        btn.style.opacity = "";
+        btn.style.cursor = "";
         btn.innerHTML = "Start Upload";
     } else {
         btn.disabled = true;
-        btn.style.opacity = "0.6";
-        btn.style.cursor = "not-allowed";
+        btn.style.opacity = "";
+        btn.style.cursor = "";
 
         if (!selectedOldFile || !selectedNewFile) {
             btn.innerHTML = "Select Old & New Images";
@@ -991,12 +1017,19 @@ function updateSubmitButtonState() {
 
 // ===== MAIN UPLOAD (CHANGE DETECTION FLOW) =====
 async function startUpload() {
+    if (processingStarted) {
+        return;
+    }
+
     if (!globOldPath || !globNewPath || !globJobId) {
         alert("Upload and generate footprints for both images first.");
         return;
     }
 
     try {
+        processingStarted = true;
+        updateSubmitButtonState();
+
         await checkProcessingAvailability();
 
         document.getElementById("progressWrap").style.display = "block";
@@ -1049,6 +1082,8 @@ async function startUpload() {
         console.error("Upload/processing error:", error);
         alert("Error: " + error.message);
         document.getElementById("progressWrap").style.display = "none";
+        processingStarted = false;
+        updateSubmitButtonState();
     }
 }
 
