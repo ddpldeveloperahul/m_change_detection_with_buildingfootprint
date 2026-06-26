@@ -23,8 +23,10 @@ from  rest_framework.permissions import IsAuthenticated # type: ignore
 import rasterio
 from rasterio.warp import reproject, Resampling
 from rasterio.plot import reshape_as_image
+from rasterio.features import rasterize
 import cv2
 from PIL import Image
+from PIL import ImageDraw
 import os
 import geopandas as gpd
 import pandas as pd
@@ -34,6 +36,10 @@ from django.contrib.sessions.models import Session
 from .file_handler import save_large_file
 from django.http import FileResponse
 import zipfile
+import tempfile
+
+HIGH_QUALITY_PREVIEW_SIZE = 4096
+PNG_SAVE_OPTIONS = {"compress_level": 1}
 
 def media_url_from_path(file_path):
     return settings.MEDIA_URL + os.path.relpath(file_path, settings.MEDIA_ROOT).replace("\\", "/")
@@ -72,6 +78,289 @@ def build_download_url(route_name, file_name):
     return f"{reverse(route_name)}?{urlencode({'file': file_name})}"
 
 
+def read_shapefile_attribute_table(file_path):
+    table = {
+        "name": os.path.basename(file_path) if file_path else "",
+        "columns": [],
+        "rows": [],
+        "total_rows": 0,
+        "error": "",
+    }
+
+    if not file_path or not os.path.exists(file_path):
+        table["error"] = "Shapefile not found."
+        return table
+
+    try:
+        if file_path.lower().endswith(".zip"):
+            with tempfile.TemporaryDirectory() as temp_dir:
+                with zipfile.ZipFile(file_path) as archive:
+                    for member in archive.infolist():
+                        target_path = os.path.abspath(os.path.join(temp_dir, member.filename))
+                        if os.path.commonpath([target_path, temp_dir]) != temp_dir:
+                            continue
+                        archive.extract(member, temp_dir)
+
+                shp_path = None
+                for root, _, files in os.walk(temp_dir):
+                    for file_name in files:
+                        if file_name.lower().endswith(".shp"):
+                            shp_path = os.path.join(root, file_name)
+                            break
+                    if shp_path:
+                        break
+
+                if not shp_path:
+                    table["error"] = "No .shp file found inside ZIP."
+                    return table
+
+                table["name"] = os.path.basename(shp_path)
+                gdf = gpd.read_file(shp_path)
+        else:
+            table["name"] = os.path.basename(file_path)
+            gdf = gpd.read_file(file_path)
+
+        if getattr(gdf, "geometry", None) is not None and gdf.geometry.name in gdf.columns:
+            gdf = gdf.drop(columns=[gdf.geometry.name])
+
+        gdf = gdf.fillna("")
+        table["columns"] = [str(column) for column in gdf.columns]
+        table["total_rows"] = len(gdf)
+        table["rows"] = [
+            [str(value) for value in row]
+            for row in gdf.astype(str).values.tolist()
+        ]
+    except Exception as exc:
+        table["error"] = f"Could not read attribute table: {exc}"
+
+    return table
+
+
+def get_readable_shapefile_path(file_path, temp_dir):
+    if not file_path:
+        return None
+
+    if not file_path.lower().endswith(".zip"):
+        return file_path if file_path.lower().endswith(".shp") else None
+
+    with zipfile.ZipFile(file_path) as archive:
+        for member in archive.infolist():
+            target_path = os.path.abspath(os.path.join(temp_dir, member.filename))
+            if os.path.commonpath([target_path, temp_dir]) != temp_dir:
+                continue
+            archive.extract(member, temp_dir)
+
+    for root, _, files in os.walk(temp_dir):
+        for file_name in files:
+            if file_name.lower().endswith(".shp"):
+                return os.path.join(root, file_name)
+
+    return None
+
+
+def build_shapefile_preview_png(file_path, reference_raster_path=None, preview_image_path=None):
+    if not file_path or not os.path.exists(file_path):
+        return None
+
+    base_path = os.path.splitext(file_path)[0]
+    preview_path = base_path + "_join_mask_preview.png"
+    reference_mtime = os.path.getmtime(reference_raster_path) if reference_raster_path and os.path.exists(reference_raster_path) else 0
+    source_mtime = os.path.getmtime(file_path)
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        shp_path = get_readable_shapefile_path(file_path, temp_dir)
+        if not shp_path:
+            return None
+
+        gdf = gpd.read_file(shp_path)
+
+    if gdf.empty or getattr(gdf, "geometry", None) is None:
+        return None
+
+    gdf = gdf.reset_index(drop=True)
+    gdf["_feature_row_index"] = gdf.index
+    gdf = gdf[gdf.geometry.notna()].copy()
+    if gdf.empty:
+        return None
+
+    os.makedirs(os.path.dirname(preview_path), exist_ok=True)
+
+    if reference_raster_path and os.path.exists(reference_raster_path):
+        with rasterio.open(reference_raster_path) as reference:
+            target_width = reference.width
+            target_height = reference.height
+            target_transform = reference.transform
+            target_crs = reference.crs
+
+            if preview_image_path and os.path.exists(preview_image_path):
+                with Image.open(preview_image_path) as preview_image:
+                    target_width, target_height = preview_image.size
+                x_scale = reference.width / target_width
+                y_scale = reference.height / target_height
+                target_transform = reference.transform * reference.transform.scale(x_scale, y_scale)
+
+            if target_crs and gdf.crs and gdf.crs != target_crs:
+                gdf = gdf.to_crs(target_crs)
+
+            shapes = [(geometry, 255) for geometry in gdf.geometry if geometry and not geometry.is_empty]
+            if not shapes:
+                return None
+
+            mask = rasterize(
+                shapes,
+                out_shape=(target_height, target_width),
+                transform=target_transform,
+                fill=0,
+                dtype="uint8",
+            )
+
+            if not mask.any():
+                return build_unaligned_shapefile_preview_png(gdf, preview_path)
+
+            image = Image.new("RGBA", (target_width, target_height), (0, 0, 0, 0))
+            fill = Image.new("RGBA", image.size, (255, 0, 0, 100))
+            image.paste(fill, mask=Image.fromarray(mask))
+
+            draw = ImageDraw.Draw(image)
+            features = []
+
+            for _, row in gdf.iterrows():
+                geometry = row.geometry
+                if not geometry or geometry.is_empty:
+                    continue
+
+                try:
+                    pixel_parts = []
+                    geometries = geometry.geoms if hasattr(geometry, "geoms") else [geometry]
+                    for part in geometries:
+                        exterior = getattr(part, "exterior", None)
+                        if exterior is None:
+                            continue
+                        coords = [~target_transform * coord for coord in exterior.coords]
+                        pixel_parts.append([(x, y) for x, y in coords])
+
+                    for coords in pixel_parts:
+                        if len(coords) >= 2:
+                            draw.line(coords + [coords[0]], fill=(255, 0, 0, 230), width=2)
+
+                    feature_payload = build_feature_payload(int(row["_feature_row_index"]), pixel_parts)
+                    if feature_payload:
+                        features.append(feature_payload)
+                except Exception:
+                    continue
+
+            image.save(preview_path, **PNG_SAVE_OPTIONS)
+            return preview_path, {
+                "width": target_width,
+                "height": target_height,
+                "features": features,
+            }
+
+    return build_unaligned_shapefile_preview_png(gdf, preview_path)
+
+
+def build_feature_payload(feature_index, pixel_parts):
+    clean_parts = []
+    all_x = []
+    all_y = []
+
+    for coords in pixel_parts:
+        clean_coords = [
+            [round(float(x), 2), round(float(y), 2)]
+            for x, y in coords
+            if np.isfinite(x) and np.isfinite(y)
+        ]
+        if len(clean_coords) < 3:
+            continue
+        clean_parts.append(clean_coords)
+        all_x.extend(point[0] for point in clean_coords)
+        all_y.extend(point[1] for point in clean_coords)
+
+    if not clean_parts or not all_x or not all_y:
+        return None
+
+    return {
+        "index": feature_index,
+        "parts": clean_parts,
+        "bounds": [
+            min(all_x),
+            min(all_y),
+            max(all_x),
+            max(all_y),
+        ],
+    }
+
+
+def build_unaligned_shapefile_preview_png(gdf, preview_path):
+    bounds = gdf.total_bounds
+    min_x, min_y, max_x, max_y = bounds
+    if min_x == max_x or min_y == max_y:
+        return None
+
+    width, height = 1024, 1024
+    image = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+
+    def to_pixel(x, y):
+        px = ((x - min_x) / (max_x - min_x)) * (width - 40) + 20
+        py = height - (((y - min_y) / (max_y - min_y)) * (height - 40) + 20)
+        return px, py
+
+    features = []
+
+    for _, row in gdf.iterrows():
+        geometry = row.geometry
+        if not geometry or geometry.is_empty:
+            continue
+
+        pixel_parts = []
+        geometries = geometry.geoms if hasattr(geometry, "geoms") else [geometry]
+        for part in geometries:
+            exterior = getattr(part, "exterior", None)
+            if exterior is None:
+                continue
+            coords = [to_pixel(x, y) for x, y in exterior.coords]
+            pixel_parts.append(coords)
+            if len(coords) >= 3:
+                draw.polygon(coords, fill=(255, 0, 0, 100), outline=(255, 0, 0, 230))
+
+        feature_payload = build_feature_payload(int(row["_feature_row_index"]), pixel_parts)
+        if feature_payload:
+            features.append(feature_payload)
+
+    image.save(preview_path, **PNG_SAVE_OPTIONS)
+    return preview_path, {
+        "width": width,
+        "height": height,
+        "features": features,
+    }
+
+
+def find_change_result_for_shapefile(file_path):
+    if not file_path:
+        return None
+
+    target_name = os.path.basename(file_path)
+    if not target_name:
+        return None
+
+    return ChangeResult.objects.filter(result_shp__iendswith=target_name).order_by("-created_at").first()
+
+
+def find_latest_change_result_for_user(user):
+    if not user:
+        return None
+
+    return (
+        ChangeResult.objects
+        .filter(user=user)
+        .exclude(result_png="")
+        .exclude(result_shp="")
+        .order_by("-created_at")
+        .first()
+    )
+
+
 def build_preview_path(source_path):
     base, _ = os.path.splitext(source_path)
     return base + ".png"
@@ -80,6 +369,24 @@ def build_preview_path(source_path):
 def build_aligned_preview_path(source_path):
     base, _ = os.path.splitext(source_path)
     return base + "_aligned_to_old.png"
+
+
+def preview_needs_refresh(source_path, preview_path, max_preview_size=HIGH_QUALITY_PREVIEW_SIZE):
+    if not source_path or not preview_path or not os.path.exists(source_path):
+        return False
+
+    if not os.path.exists(preview_path):
+        return True
+
+    if os.path.getmtime(preview_path) < os.path.getmtime(source_path):
+        return True
+
+    try:
+        with rasterio.open(source_path) as source, Image.open(preview_path) as preview:
+            expected_max_dimension = min(max(source.width, source.height), max_preview_size)
+            return max(preview.size) < expected_max_dimension
+    except Exception:
+        return False
 
 
 def normalize_band_to_uint8(band):
@@ -118,7 +425,7 @@ def save_tiff_preview_png(source_path, preview_path):
     from PIL import Image
     from rasterio.enums import Resampling
 
-    MAX_PREVIEW_SIZE = 1024
+    MAX_PREVIEW_SIZE = HIGH_QUALITY_PREVIEW_SIZE
     
     with rasterio.open(source_path) as src:
         print(f"Image info: bands={src.count}, shape=({src.height}x{src.width}), dtype={src.dtypes[0]}")
@@ -158,7 +465,7 @@ def save_tiff_preview_png(source_path, preview_path):
             img = np.stack(normalized_bands, axis=-1)
         
         print(f"Preview shape: {img.shape}, dtype: {img.dtype}")
-        Image.fromarray(img, mode='RGB').save(preview_path)
+        Image.fromarray(img, mode='RGB').save(preview_path, **PNG_SAVE_OPTIONS)
         print(f"Preview saved: {preview_path}")
 
 
@@ -167,7 +474,7 @@ def save_aligned_tiff_preview_png(reference_path, source_path, preview_path):
     from rasterio.enums import Resampling
     from .utils import open_aligned_new_source
 
-    MAX_PREVIEW_SIZE = 1024
+    MAX_PREVIEW_SIZE = HIGH_QUALITY_PREVIEW_SIZE
 
     with rasterio.open(reference_path) as reference_src, rasterio.open(source_path) as source_src:
         with open_aligned_new_source(reference_src, source_src) as aligned_src:
@@ -182,7 +489,7 @@ def save_aligned_tiff_preview_png(reference_path, source_path, preview_path):
             )
 
         img = to_preview_rgb(data)
-        Image.fromarray(img, mode='RGB').save(preview_path)
+        Image.fromarray(img, mode='RGB').save(preview_path, **PNG_SAVE_OPTIONS)
         print(f"Aligned preview saved: {preview_path}")
 
 def build_result_context(result_png_path, result_tif_path, result_shp_path, img23_preview_path, img25_preview_path, img23_name, img25_name):
@@ -343,6 +650,7 @@ def upload_images(request):
 
 def result_view(request):
     result_id = request.GET.get('id')
+    attribute_file = request.GET.get('attribute_file')
 
     if not result_id:
         return HttpResponse("Result id is required", status=400)
@@ -368,12 +676,12 @@ def result_view(request):
         build_preview_path(img25_path) if img25_path else None
     )
 
-    if img23_path and img23_preview_path and not os.path.exists(img23_preview_path):
+    if img23_path and img23_preview_path and preview_needs_refresh(img23_path, img23_preview_path):
         save_tiff_preview_png(img23_path, img23_preview_path)
 
-    if img23_path and img25_path and img25_preview_path and not os.path.exists(img25_preview_path):
+    if img23_path and img25_path and img25_preview_path and preview_needs_refresh(img25_path, img25_preview_path):
         save_aligned_tiff_preview_png(img23_path, img25_path, img25_preview_path)
-    elif img25_path and img25_preview_path and not os.path.exists(img25_preview_path):
+    elif img25_path and img25_preview_path and preview_needs_refresh(img25_path, img25_preview_path):
         save_tiff_preview_png(img25_path, img25_preview_path)
 
     context = {
@@ -389,7 +697,19 @@ def result_view(request):
         'img25_name': os.path.basename(result.uploaded_2025.name) if result.uploaded_2025 else '',
         'result_shp_name': os.path.basename(result.result_shp.name) if result.result_shp else '',
         'result_tif_name': os.path.basename(result.result_tif.name) if result.result_tif else '',
+        'join_output_features': {},
     }
+
+    attribute_path = resolve_media_file_path(attribute_file)
+    if attribute_file and attribute_path:
+        context['attribute_table'] = read_shapefile_attribute_table(attribute_path)
+        context['attribute_file_url'] = media_url_from_path(attribute_path)
+        join_preview_result = build_shapefile_preview_png(attribute_path, img23_path, img23_preview_path)
+        if join_preview_result:
+            join_preview_path, join_output_features = join_preview_result
+            context['join_output_png'] = media_url_from_path(join_preview_path)
+            context['join_output_name'] = os.path.basename(attribute_path)
+            context['join_output_features'] = join_output_features or {}
 
     return render(request, 'result.html', context)
 
@@ -446,6 +766,16 @@ def render_spatial_join_result(request, result_id):
         'excel': obj.result_excel.path,
     }
 
+    source_change_result = find_change_result_for_shapefile(obj.change_shapefile.path if obj.change_shapefile else None)
+    if not source_change_result:
+        source_change_result = find_latest_change_result_for_user(obj.user)
+    attribute_table_url = ""
+    if source_change_result:
+        attribute_table_url = (
+            f"{reverse('change_result')}?"
+            f"{urlencode({'id': source_change_result.id, 'attribute_file': obj.result_shapefile.name})}"
+        )
+
     return render(request, 'result1.html', {
         'result': result,
         'result_mode': result_mode,
@@ -456,6 +786,7 @@ def render_spatial_join_result(request, result_id):
         'shp_url': obj.result_shapefile.url,
         'excel_download_url': build_download_url('download_excel', obj.result_excel.name),
         'shp_download_url': build_download_url('download_shapefile', obj.result_shapefile.name),
+        'attribute_table_url': attribute_table_url,
     })
 
 def download_excel(request):

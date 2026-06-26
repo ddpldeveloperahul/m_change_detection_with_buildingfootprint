@@ -1,6 +1,3 @@
-
-
-
 {% extends 'base.html' %}
 {% block content %}
 
@@ -15,7 +12,7 @@
     }
 
     .container-custom {
-        max-width: 1000px;
+        max-width: min(1180px, calc(100vw - 520px));
         width: 100%;
     }
 
@@ -35,8 +32,8 @@
     .image-wrapper {
         position: relative;
         width: 100%;
-        max-width: 700px;
-        height: clamp(460px, 62vh, 620px);
+        max-width: 100%;
+        height: clamp(620px, 72vh, 820px);
         min-height: 0;
         border-radius: 8px;
         border: 1px solid #ddd;
@@ -64,6 +61,92 @@
 
     .image-wrapper.is-selecting {
         cursor: crosshair;
+    }
+
+    .attribute-side-panel {
+        position: fixed;
+        top: 92px;
+        right: 20px;
+        width: min(420px, calc(100vw - 40px));
+        max-height: calc(100vh - 122px);
+        background: #ffffff;
+        border: 1px solid #e6e6e6;
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        z-index: 998;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .attribute-side-panel.is-hidden {
+        display: none;
+    }
+
+    .attribute-panel-header {
+        padding: 12px 14px;
+        border-bottom: 1px solid #e9ecef;
+        text-align: left;
+    }
+
+    .attribute-panel-header h6 {
+        margin: 0;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+
+    .attribute-table-shell {
+        overflow: auto;
+        min-height: 260px;
+        text-align: left;
+    }
+
+    .attribute-table {
+        width: max-content;
+        min-width: 100%;
+        margin: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 0.78rem;
+    }
+
+    .attribute-table th,
+    .attribute-table td {
+        padding: 8px 10px;
+        border-right: 1px solid #e9ecef;
+        border-bottom: 1px solid #e9ecef;
+        white-space: nowrap;
+        max-width: 220px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .attribute-table th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #eef5ff;
+        color: #1f2d3d;
+        font-weight: 700;
+    }
+
+    .attribute-table tbody tr {
+        cursor: pointer;
+    }
+
+    .attribute-table tbody tr.is-selected {
+        background: #e7f1ff;
+    }
+
+    .attribute-table-empty {
+        padding: 24px;
+        color: #6c757d;
+        text-align: center;
+    }
+
+    .attribute-table-meta {
+        color: #6c757d;
+        font-size: 0.85rem;
     }
 
     .result-img {
@@ -118,6 +201,17 @@
         z-index: 30;
     }
 
+    .join-highlight-layer {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 35;
+        pointer-events: none;
+        transform-origin: center center;
+        display: none;
+    }
+
     .btn-custom {
         font-weight: 600;
         padding: 12px;
@@ -146,7 +240,7 @@
     }
 
     .slider-controls {
-        max-width: 700px;
+        max-width: min(720px, 100%);
         margin: -6px auto 18px;
         display: grid;
         grid-template-columns: repeat(2, minmax(220px, 1fr));
@@ -392,7 +486,7 @@
 
         .image-wrapper {
             max-width: 100%;
-            height: 420px;
+            height: clamp(420px, 62vh, 680px);
         }
 
         .slider-controls {
@@ -403,6 +497,13 @@
         .overlay-picker-panel {
             position: static;
             width: 100%;
+            margin-bottom: 16px;
+        }
+
+        .attribute-side-panel {
+            position: static;
+            width: 100%;
+            max-height: 520px;
             margin-bottom: 16px;
         }
 
@@ -434,6 +535,18 @@
             <label><input type="checkbox" id="chkBlue" checked> <span>Complete Detection</span></label>
             <span class="layer-file-type">{{ result_shp_name }}</span>
         </div>
+        {% if attribute_table %}
+        <div class="layer-item">
+            <label><input type="checkbox" id="chkAttributeTable" checked> <span>Attribute Table</span></label>
+            <span class="layer-file-type">{{ attribute_table.name }}</span>
+        </div>
+        {% endif %}
+        {% if join_output_png %}
+        <div class="layer-item">
+            <label><input type="checkbox" id="chkJoinOutput" checked> <span>Join Output</span></label>
+            <span class="layer-file-type">{{ join_output_name }}</span>
+        </div>
+        {% endif %}
         {% comment %} <button type="button" class="btn btn-sm btn-success mt-2" onclick="applyLayers()">Apply
             Selection</button> {% endcomment %}
         {% comment %} <small>Checkbox change hote hi preview update ho jayega.</small> {% endcomment %}
@@ -467,6 +580,10 @@
                     <img id="frontLayer" src="{{ img25 }}" class="result-img" style="display:none;" draggable="false">
                     <img id="blueLayer" src="{{ result_png }}" class="result-img" style="display:none; opacity:0.45;"
                         draggable="false">
+                    {% if join_output_png %}
+                    <img id="joinLayer" src="{{ join_output_png }}" class="result-img" style="display:none;"
+                        draggable="false">
+                    {% endif %}
                 </div>
 
                 <div id="compareBox" class="image-mode" style="display:none;">
@@ -481,11 +598,16 @@
                                 draggable="false">
                             <img id="compareRevealBlue" src="{{ result_png }}" class="result-img"
                                 style="display:none; opacity:0.35; pointer-events:none;" draggable="false">
+                            {% if join_output_png %}
+                            <img id="compareRevealJoin" src="{{ join_output_png }}" class="result-img"
+                                style="display:none; pointer-events:none;" draggable="false">
+                            {% endif %}
                         </div>
                     </div>
                     <div id="sliderLine"></div>
                 </div>
 
+                <svg id="joinHighlightLayer" class="join-highlight-layer" preserveAspectRatio="xMidYMid meet"></svg>
                 <div id="selectionBox" class="selection-box"></div>
             </div>
 
@@ -502,7 +624,7 @@
                         <span>Zoom</span>
                         <span id="zoomValue">100%</span>
                     </label>
-                    <input type="range" id="zoomSlider" min="100" max="800" value="100" step="10">
+                    <input type="range" id="zoomSlider" min="100" max="1000" value="100" step="10">
                 </div>
             </div>
 
@@ -533,7 +655,46 @@
             </div>
         </div>
     </div>
+
+    {% if attribute_table %}
+    <div id="attributeTablePanel" class="attribute-side-panel">
+        <div class="attribute-panel-header">
+            <h6>Attribute Table</h6>
+            <div class="attribute-table-meta">
+                {{ attribute_table.name }}{% if attribute_table.total_rows %} | {{ attribute_table.total_rows }} records{% endif %}
+            </div>
+        </div>
+        <div class="attribute-table-shell">
+            {% if attribute_table.error %}
+                <div class="attribute-table-empty">{{ attribute_table.error }}</div>
+            {% elif attribute_table.columns %}
+                <table class="attribute-table">
+                    <thead>
+                        <tr>
+                            {% for column in attribute_table.columns %}
+                                <th>{{ column }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in attribute_table.rows %}
+                            <tr data-feature-index="{{ forloop.counter0 }}">
+                                {% for value in row %}
+                                    <td title="{{ value }}">{{ value }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="attribute-table-empty">No attribute records found.</div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 </div>
+
+{{ join_output_features|json_script:"joinOutputFeaturesData" }}
 
 <script>
     let scale = 1;
@@ -551,10 +712,12 @@
     let selectionStartY = 0;
     let activeSelectionPointerId = null;
     let selectZoomEnabled = false;
+    let selectedJoinFeature = null;
 
     const resultImg = "{{ result_png }}";
     const backImg = "{{ img23 }}";
     const frontImg = "{{ img25 }}";
+    const joinOutputImg = "{{ join_output_png|default:'' }}";
 
     const zoomImage = document.getElementById("zoomImage");
     const layerBox = document.getElementById("layerBox");
@@ -563,14 +726,17 @@
     const backLayer = document.getElementById("backLayer");
     const frontLayer = document.getElementById("frontLayer");
     const blueLayer = document.getElementById("blueLayer");
+    const joinLayer = document.getElementById("joinLayer");
     const baseImgCompare = document.getElementById("baseImgCompare");
     const compareReveal = document.getElementById("compareReveal");
     const compareRevealStage = document.getElementById("compareRevealStage");
     const compareRevealBack = document.getElementById("compareRevealBack");
     const compareRevealFront = document.getElementById("compareRevealFront");
     const compareRevealBlue = document.getElementById("compareRevealBlue");
+    const compareRevealJoin = document.getElementById("compareRevealJoin");
     const sliderLine = document.getElementById("sliderLine");
     const selectionBox = document.getElementById("selectionBox");
+    const joinHighlightLayer = document.getElementById("joinHighlightLayer");
     const wrapper = document.getElementById("wrapper");
     const layerPanel = document.getElementById("layerPanel");
     const overlayPickerPanel = document.getElementById("overlayPickerPanel");
@@ -580,14 +746,24 @@
     const chkBack = document.getElementById("chkBack");
     const chkFront = document.getElementById("chkFront");
     const chkBlue = document.getElementById("chkBlue");
+    const chkJoinOutput = document.getElementById("chkJoinOutput");
     const blueIntensitySlider = document.getElementById("blueIntensitySlider");
     const blueIntensityValue = document.getElementById("blueIntensityValue");
     const zoomSlider = document.getElementById("zoomSlider");
     const zoomValue = document.getElementById("zoomValue");
+    const minZoomScale = 1;
+    const maxZoomScale = 30;
+    const minZoomPercent = 100;
+    const maxZoomPercent = 1000;
     const colorPlane = document.getElementById("colorPlane");
     const colorPlaneHandle = document.getElementById("colorPlaneHandle");
     const hueStrip = document.getElementById("hueStrip");
     const hueHandle = document.getElementById("hueHandle");
+    const joinOutputFeatureDataElement = document.getElementById("joinOutputFeaturesData");
+    const joinOutputFeatureData = joinOutputFeatureDataElement ? JSON.parse(joinOutputFeatureDataElement.textContent) : {};
+    const joinOutputFeatures = Array.isArray(joinOutputFeatureData.features) ? joinOutputFeatureData.features : [];
+    const joinOutputFeaturesByIndex = new Map(joinOutputFeatures.map((feature) => [Number(feature.index), feature]));
+    const attributeRows = Array.from(document.querySelectorAll(".attribute-table tbody tr[data-feature-index]"));
 
     let blueOpacity = 0.45;
     let overlayPreviewSrc = resultImg;
@@ -641,6 +817,16 @@
 
     function clamp(value, min, max) {
         return Math.min(Math.max(value, min), max);
+    }
+
+    function scaleToZoomPercent(nextScale) {
+        const scaleRatio = (clamp(nextScale, minZoomScale, maxZoomScale) - minZoomScale) / (maxZoomScale - minZoomScale);
+        return Math.round(minZoomPercent + (scaleRatio * (maxZoomPercent - minZoomPercent)));
+    }
+
+    function zoomPercentToScale(percent) {
+        const percentRatio = (clamp(percent, minZoomPercent, maxZoomPercent) - minZoomPercent) / (maxZoomPercent - minZoomPercent);
+        return minZoomScale + (percentRatio * (maxZoomScale - minZoomScale));
     }
 
     function hsvToRgb(h, s, v) {
@@ -782,16 +968,20 @@
         const transformValue = `translate(${panX}px, ${panY}px) scale(${scale})`;
         zoomImage.style.transform = transformValue;
         layerBox.style.transform = transformValue;
+        joinHighlightLayer.style.transform = transformValue;
         compareBox.style.transform = "none";
         compareBaseStage.style.transform = transformValue;
         compareRevealStage.style.transform = transformValue;
-        zoomValue.textContent = `${Math.round(scale * 100)}%`;
-        zoomSlider.value = Math.round(scale * 100);
+        const displayZoom = scaleToZoomPercent(scale);
+        zoomValue.textContent = `${displayZoom}%`;
+        zoomSlider.value = displayZoom;
         updatePanCursor();
 
         if (compareBox.style.display === "block") {
             updateSliderFromRatio();
         }
+
+        renderJoinHighlight();
     }
 
     function getReferenceImageElement() {
@@ -871,6 +1061,101 @@
         selectionBox.style.display = "none";
     }
 
+    function setSelectedAttributeRow(featureIndex) {
+        if (featureIndex === null || featureIndex === undefined) {
+            attributeRows.forEach((row) => row.classList.remove("is-selected"));
+            return;
+        }
+
+        attributeRows.forEach((row) => {
+            row.classList.toggle("is-selected", Number(row.dataset.featureIndex) === Number(featureIndex));
+        });
+    }
+
+    function clearJoinHighlight() {
+        selectedJoinFeature = null;
+        joinHighlightLayer.replaceChildren();
+        joinHighlightLayer.style.display = "none";
+        setSelectedAttributeRow(null);
+    }
+
+    function getFeatureBoundsInWrapper(feature) {
+        const imageWidth = Number(joinOutputFeatureData.width || joinLayer?.naturalWidth || zoomImage.naturalWidth || wrapper.clientWidth);
+        const imageHeight = Number(joinOutputFeatureData.height || joinLayer?.naturalHeight || zoomImage.naturalHeight || wrapper.clientHeight);
+        const fitScale = Math.min(wrapper.clientWidth / imageWidth, wrapper.clientHeight / imageHeight);
+        const fittedLeft = (wrapper.clientWidth - (imageWidth * fitScale)) / 2;
+        const fittedTop = (wrapper.clientHeight - (imageHeight * fitScale)) / 2;
+        const [minX, minY, maxX, maxY] = feature.bounds;
+
+        return {
+            left: fittedLeft + (minX * fitScale),
+            top: fittedTop + (minY * fitScale),
+            right: fittedLeft + (maxX * fitScale),
+            bottom: fittedTop + (maxY * fitScale),
+        };
+    }
+
+    function zoomToJoinFeature(feature) {
+        const bounds = getFeatureBoundsInWrapper(feature);
+        const width = Math.max(bounds.right - bounds.left, 1);
+        const height = Math.max(bounds.bottom - bounds.top, 1);
+        const padding = 110;
+        const nextScale = clamp(
+            Math.min(wrapper.clientWidth / (width + padding), wrapper.clientHeight / (height + padding)),
+            minZoomScale,
+            maxZoomScale
+        );
+        const wrapperCenterX = wrapper.clientWidth / 2;
+        const wrapperCenterY = wrapper.clientHeight / 2;
+        const featureCenterX = bounds.left + (width / 2);
+        const featureCenterY = bounds.top + (height / 2);
+
+        scale = nextScale;
+        panX = -(featureCenterX - wrapperCenterX) * nextScale;
+        panY = -(featureCenterY - wrapperCenterY) * nextScale;
+        applyScale();
+    }
+
+    function renderJoinHighlight() {
+        if (!selectedJoinFeature || !chkJoinOutput || !chkJoinOutput.checked || !joinOutputFeatureData.width || !joinOutputFeatureData.height) {
+            joinHighlightLayer.replaceChildren();
+            joinHighlightLayer.style.display = "none";
+            return;
+        }
+
+        joinHighlightLayer.setAttribute("viewBox", `0 0 ${joinOutputFeatureData.width} ${joinOutputFeatureData.height}`);
+        joinHighlightLayer.replaceChildren();
+
+        selectedJoinFeature.parts.forEach((part) => {
+            const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+            polygon.setAttribute("points", part.map((point) => point.join(",")).join(" "));
+            polygon.setAttribute("fill", "rgba(0, 123, 255, 0.5)");
+            polygon.setAttribute("stroke", "#0057ff");
+            polygon.setAttribute("stroke-width", "3");
+            polygon.setAttribute("vector-effect", "non-scaling-stroke");
+            joinHighlightLayer.appendChild(polygon);
+        });
+
+        joinHighlightLayer.style.display = "block";
+    }
+
+    function selectJoinFeature(featureIndex) {
+        const feature = joinOutputFeaturesByIndex.get(Number(featureIndex));
+        if (!feature) {
+            return;
+        }
+
+        if (chkJoinOutput && !chkJoinOutput.checked) {
+            chkJoinOutput.checked = true;
+            refreshActiveView();
+        }
+
+        selectedJoinFeature = feature;
+        setSelectedAttributeRow(featureIndex);
+        renderJoinHighlight();
+        zoomToJoinFeature(feature);
+    }
+
     function updateSelectionBox(currentX, currentY) {
         const left = Math.min(selectionStartX, currentX);
         const top = Math.min(selectionStartY, currentY);
@@ -927,7 +1212,7 @@
         const selectionCenterX = minX + (width / 2);
         const selectionCenterY = minY + (height / 2);
         const zoomFactor = Math.min(wrapper.clientWidth / width, wrapper.clientHeight / height);
-        const nextScale = clamp(scale * zoomFactor, 1, 8);
+        const nextScale = clamp(scale * zoomFactor, minZoomScale, maxZoomScale);
         const contentCenterX = (selectionCenterX - wrapperCenterX - panX) / scale;
         const contentCenterY = (selectionCenterY - wrapperCenterY - panY) / scale;
 
@@ -955,16 +1240,16 @@
     }
 
     function setScale(nextScale) {
-        scale = clamp(nextScale, 1, 8);
+        scale = clamp(nextScale, minZoomScale, maxZoomScale);
         applyScale();
     }
 
     function zoomIn() {
-        setScale(scale + 0.2);
+        setScale(scale + 1);
     }
 
     function zoomOut() {
-        setScale(scale - 0.2);
+        setScale(scale - 1);
     }
 
     function getSelectedLayers() {
@@ -982,6 +1267,10 @@
             layers.push({ name: "blue", src: resultImg });
         }
 
+        if (joinOutputImg && chkJoinOutput && chkJoinOutput.checked) {
+            layers.push({ name: "join", src: joinOutputImg });
+        }
+
         return layers;
     }
 
@@ -997,7 +1286,7 @@
         };
     }
 
-    function applyPhaseOrder(backElement, frontElement, blueElement) {
+    function applyPhaseOrder(backElement, frontElement, blueElement, joinElement = null) {
         const phaseElements = getPhaseElementMap(backElement, frontElement);
         const phaseOrder = getPhaseLayerOrder();
         const bottomLayer = phaseElements[phaseOrder[1]] || backElement;
@@ -1006,6 +1295,9 @@
         bottomLayer.style.zIndex = "1";
         topLayer.style.zIndex = "2";
         blueElement.style.zIndex = "3";
+        if (joinElement) {
+            joinElement.style.zIndex = "4";
+        }
     }
 
     function getCompareBaseSource() {
@@ -1025,6 +1317,10 @@
     function refreshActiveView() {
         const selectedLayers = getSelectedLayers();
 
+        if (!chkJoinOutput || !chkJoinOutput.checked) {
+            clearJoinHighlight();
+        }
+
         if (compareBox.style.display === "block" && selectedLayers.length >= 2) {
             startCompare(true);
             return;
@@ -1043,12 +1339,16 @@
         applyScale();
     }
 
-    function syncLayerStack(backElement, frontElement, blueElement) {
+    function syncLayerStack(backElement, frontElement, blueElement, joinElement = null) {
         backElement.style.display = chkBack.checked ? "block" : "none";
         frontElement.style.display = chkFront.checked ? "block" : "none";
         blueElement.style.display = chkBlue.checked ? "block" : "none";
+        if (joinElement) {
+            joinElement.style.display = chkJoinOutput && chkJoinOutput.checked ? "block" : "none";
+            joinElement.style.opacity = "1";
+        }
 
-        applyPhaseOrder(backElement, frontElement, blueElement);
+        applyPhaseOrder(backElement, frontElement, blueElement, joinElement);
 
         backElement.style.opacity = "1";
         frontElement.style.opacity = "1";
@@ -1084,7 +1384,7 @@
         zoomImage.dataset.currentLayer = "stack";
         layerBox.style.display = "block";
 
-        syncLayerStack(backLayer, frontLayer, blueLayer);
+        syncLayerStack(backLayer, frontLayer, blueLayer, joinLayer);
         setWrapperAspectRatio(selectedLayers[0].src);
         applyScale();
     }
@@ -1093,6 +1393,10 @@
         chkBack.checked = true;
         chkFront.checked = true;
         chkBlue.checked = true;
+        if (chkJoinOutput) {
+            chkJoinOutput.checked = true;
+        }
+        clearJoinHighlight();
         blueOpacity = 0.45;
         blueIntensitySlider.value = "45";
         applyBlueIntensity();
@@ -1120,7 +1424,7 @@
         compareBox.style.display = "block";
         baseImgCompare.src = getCompareBaseSource();
 
-        syncLayerStack(compareRevealBack, compareRevealFront, compareRevealBlue);
+        syncLayerStack(compareRevealBack, compareRevealFront, compareRevealBlue, compareRevealJoin);
         setWrapperAspectRatio(baseImgCompare.src);
 
         if (!keepSliderPosition) {
@@ -1194,7 +1498,7 @@
 
     wrapper.addEventListener("wheel", (event) => {
         event.preventDefault();
-        const delta = event.deltaY < 0 ? 0.15 : -0.15;
+        const delta = event.deltaY < 0 ? 1 : -1;
         setScale(scale + delta);
     }, { passive: false });
 
@@ -1332,15 +1636,22 @@
         });
     });
 
-    [chkBack, chkFront, chkBlue].forEach((checkbox) => {
+    [chkBack, chkFront, chkBlue, chkJoinOutput].filter(Boolean).forEach((checkbox) => {
         checkbox.addEventListener("change", refreshActiveView);
     });
 
-    [zoomImage, backLayer, frontLayer, blueLayer, baseImgCompare, compareRevealBack, compareRevealFront, compareRevealBlue]
+    attributeRows.forEach((row) => {
+        row.addEventListener("click", () => {
+            selectJoinFeature(row.dataset.featureIndex);
+        });
+    });
+
+    [zoomImage, backLayer, frontLayer, blueLayer, joinLayer, baseImgCompare, compareRevealBack, compareRevealFront, compareRevealBlue, compareRevealJoin]
+        .filter(Boolean)
         .forEach((imageElement) => {
             imageElement.addEventListener("load", () => {
                 if (compareBox.style.display === "block") {
-                    syncLayerStack(compareRevealBack, compareRevealFront, compareRevealBlue);
+                    syncLayerStack(compareRevealBack, compareRevealFront, compareRevealBlue, compareRevealJoin);
                     return;
                 }
 
@@ -1376,7 +1687,7 @@
     });
 
     zoomSlider.addEventListener("input", () => {
-        setScale(Number(zoomSlider.value) / 100);
+        setScale(zoomPercentToScale(Number(zoomSlider.value)));
     });
 
     updateOverlayColorLabels();
@@ -1385,6 +1696,16 @@
     setWrapperAspectRatio(resultImg);
     applyLayers();
     window.addEventListener("load", applyLayers);
+
+    const chkAttributeTable = document.getElementById("chkAttributeTable");
+    const attributeTablePanel = document.getElementById("attributeTablePanel");
+
+    if (chkAttributeTable && attributeTablePanel) {
+        chkAttributeTable.addEventListener("change", () => {
+            attributeTablePanel.classList.toggle("is-hidden", !chkAttributeTable.checked);
+        });
+    }
+
 </script>
 
 {% endblock %}

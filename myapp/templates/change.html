@@ -358,6 +358,14 @@
         box-shadow: 0 22px 42px rgba(22, 119, 255, 0.36);
     }
 
+    .sj-btn:disabled {
+        cursor: not-allowed;
+        filter: saturate(0.75) brightness(0.95);
+        opacity: 0.72;
+        transform: none;
+        box-shadow: none;
+    }
+
     .sj-footer {
         margin-top: 18px;
         color: #718096;
@@ -502,7 +510,7 @@
                     </div>
                 </div>
 
-                <button type="submit" class="sj-btn">{% if prefilled_file %}Run Spatial Join{% else %}Detect New Buildings{% endif %}</button>
+                <button type="submit" class="sj-btn" id="sjSubmitBtn" data-loading-text="{% if prefilled_file %}Running Spatial Join...{% else %}Detecting New Buildings...{% endif %}">{% if prefilled_file %}Run Spatial Join{% else %}Detect New Buildings{% endif %}</button>
             </form>
 
             <div class="sj-footer">Upload shapefile as .zip, or use .geojson directly</div>
@@ -532,6 +540,25 @@
 
     setupFile('mainFile', 'mainName', 'mainArea');
     setupFile('changeFile', 'changeName', 'changeArea');
+
+    var sjForm = document.getElementById('sjForm');
+    var sjSubmitBtn = document.getElementById('sjSubmitBtn');
+
+    if (sjForm && sjSubmitBtn) {
+        sjForm.addEventListener('submit', function (event) {
+            if (sjSubmitBtn.disabled) {
+                event.preventDefault();
+                return;
+            }
+
+            if (typeof sjForm.checkValidity === 'function' && !sjForm.checkValidity()) {
+                return;
+            }
+
+            sjSubmitBtn.disabled = true;
+            sjSubmitBtn.textContent = sjSubmitBtn.dataset.loadingText || sjSubmitBtn.textContent;
+        });
+    }
 </script>
 
 {% endblock %}

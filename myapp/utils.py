@@ -681,7 +681,7 @@ def process_change(old_tif, new_tif, output_dir):
 
     with rasterio.open(preview_tif) as src:
         # Downsample to reasonable size to avoid memory issues
-        MAX_PREVIEW_SIZE = 1024
+        MAX_PREVIEW_SIZE = 4096
         scale = max(src.width / MAX_PREVIEW_SIZE, src.height / MAX_PREVIEW_SIZE, 1)
         out_height = int(src.height / scale)
         out_width = int(src.width / scale)
@@ -690,7 +690,7 @@ def process_change(old_tif, new_tif, output_dir):
         preview = np.moveaxis(preview, 0, 2)
         preview = ensure_uint8_rgb(preview)
         preview = np.ascontiguousarray(preview)
-        cv2.imwrite(preview_png, cv2.cvtColor(preview, cv2.COLOR_RGB2BGR))
+        cv2.imwrite(preview_png, cv2.cvtColor(preview, cv2.COLOR_RGB2BGR), [cv2.IMWRITE_PNG_COMPRESSION, 1])
 
     print("Reading shapefile...")
     try:

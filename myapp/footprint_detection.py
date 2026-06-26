@@ -44,7 +44,7 @@ if MODEL_PATH is None:
         print(f"  - {path}")
     MODEL_PATH = POSSIBLE_PATHS[0]  # Use first path as fallback
 
-CONFIDENCE = 0.30
+CONFIDENCE = 0.35
 TILE_SIZE = 2048
 
 DEVICE = torch.device(
