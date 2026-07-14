@@ -1452,13 +1452,13 @@ def user_dashboard_view(request):
     users = User.objects.all().order_by('-date_joined')
     total_users = users.count()
     total_superusers = users.filter(is_superuser=True).count()
-    total_staff = users.filter(is_staff=True).count()
+    total_regular_users = users.filter(is_superuser=False, is_staff=False).count()
 
     context = {
         'users': users,
         'total_users': total_users,
         'total_superusers': total_superusers,
-        'total_staff': total_staff,
+        'total_regular_users': total_regular_users,
     }
     return render(request, 'user_dashboard.html', context)
 
