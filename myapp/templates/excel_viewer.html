@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+    .viewer-page {
+        min-height: calc(100vh - 86px);
+        padding: clamp(16px, 4vw, 32px) clamp(12px, 3vw, 24px);
+        color: #f8fafc;
+    }
+
+    .viewer-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .btn-action {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #94a3b8;
+        padding: 10px 18px;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        font-size: 14px;
+    }
+
+    .btn-action:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #f8fafc;
+    }
+
+    .btn-download {
+        background: rgba(52, 211, 153, 0.1);
+        border: 1px solid rgba(52, 211, 153, 0.2);
+        color: #34d399;
+    }
+
+    .btn-download:hover {
+        background: #34d399;
+        color: #0f172a !important;
+        box-shadow: 0 4px 12px rgba(52, 211, 153, 0.3);
+    }
+
+    .header-card {
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .header-card h1 {
+        font-size: clamp(20px, 3vw, 26px);
+        font-weight: 800;
+        background: linear-gradient(135deg, #38bdf8 0%, #34d399 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0 0 4px 0;
+    }
+
+    .header-card p {
+        color: #94a3b8;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .highlight-banner {
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-radius: 12px;
+        padding: 12px 18px;
+        margin-bottom: 20px;
+        color: #f87171;
+        font-size: 13.5px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Spreadsheet Table Box */
+    .sheet-box {
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+    }
+
+    .sheet-table-container {
+        overflow: auto;
+        max-height: 65vh;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(15, 23, 42, 0.2);
+    }
+
+    .excel-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 13px;
+    }
+
+    .excel-table th {
+        background: rgba(30, 41, 59, 0.85);
+        padding: 14px 18px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #94a3b8;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        white-space: nowrap;
+    }
+
+    .excel-table td {
+        padding: 12px 18px;
+        color: #cbd5e1;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .excel-table tbody tr {
+        transition: background 0.15s ease;
+    }
+
+    .excel-table tbody tr:hover {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    /* Highlight matching plot row */
+    .highlight-row {
+        background: rgba(239, 68, 68, 0.15) !important;
+    }
+
+    .highlight-row:hover {
+        background: rgba(239, 68, 68, 0.2) !important;
+    }
+
+    .highlight-row td {
+        color: #fca5a5 !important;
+        border-bottom: 1px solid rgba(239, 68, 68, 0.25) !important;
+    }
+
+    .highlight-cell {
+        background: rgba(239, 68, 68, 0.25) !important;
+        color: #ffffff !important;
+        font-weight: bold !important;
+        border: 2px solid #ef4444 !important;
+        border-radius: 4px;
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+    }
+</style>
+
+<div class="viewer-page">
+    <div class="viewer-container">
+        
+        <!-- Header Actions -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+            <a href="javascript:history.back()" class="btn-action">
+                ← Back to Dashboard
+            </a>
+            
+            <a href="{% url 'download_excel' %}?file={{ excel_file }}" class="btn-action btn-download">
+                📥 Download Excel File
+            </a>
+        </div>
+
+        <!-- Header Card -->
+        <div class="header-card d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h1>📊 Excel Sheet Viewer</h1>
+                <p>Previewing file: <strong>{{ file_name }}</strong></p>
+            </div>
+            {% if highlight_plot_id %}
+            <div class="highlight-banner">
+                <span>🔴</span>
+                <span>Highlighting feedback for Plot ID: <strong>{{ highlight_plot_id }}</strong></span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Table Display Card -->
+        <div class="sheet-box">
+            <div class="sheet-table-container">
+                <table class="excel-table">
+                    <thead>
+                        <tr>
+                            {% for col in columns %}
+                            <th>{{ col }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in rows %}
+                        <tr class="{% if row.highlight %}highlight-row{% endif %}">
+                            {% for val in row.values %}
+                            <!-- Under normal rendering check if this specific value corresponds to our highlight -->
+                            <!-- Note: We check if the row is highlighted AND if this column is the plot ID -->
+                            <td class="{% if row.highlight and forloop.index0 == plot_col_idx or val == highlight_plot_id %}highlight-cell{% endif %}">
+                                {{ val }}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="{{ columns|length }}" style="text-align: center; padding: 48px; color: #64748b;">
+                                No records found in the Excel sheet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

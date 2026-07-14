@@ -537,3 +537,7 @@ d:\AI_Portal\change_detection_main_with_footprint\
 → **Configuration?** Check `FOOTPRINT_SETUP.md`
 
 **Happy processing! 🚀**
+
+
+
+ab ek  new dashboard ko create karo jb  bhi  mein    django admin  per  click  karo  to mujhe  teeno table ka  data  show  ho dashboard mein jaise humne  user ke liye banaya hai 

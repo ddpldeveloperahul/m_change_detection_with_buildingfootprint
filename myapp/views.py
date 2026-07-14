@@ -1,5 +1,6 @@
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
+from django.contrib.auth.decorators import user_passes_test
 from django.conf import settings
 from django.urls import reverse
 from matplotlib import image
@@ -9,9 +10,11 @@ from django.core.files import File
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.response import Response # type: ignore
 from rest_framework import status # type: ignore
-from myapp.serializers import SignupSerializer, LoginSerializer, SpatialJoinResultSerializer
+from rest_framework.views import APIView # type: ignore
+from rest_framework.authentication import SessionAuthentication
+from myapp.serializers import SignupSerializer, LoginSerializer, SpatialJoinResultSerializer, FeedbackSerializer, UserSerializer
 from rest_framework.decorators import api_view # type: ignore
-from django.db import transaction
+from django.db import transaction       
 from django.utils import timezone
 import json
 from .models import *
@@ -909,6 +912,8 @@ def signup_api(request):
         })
 
     return Response(serializer.errors, status=400)
+
+
 @api_view(['POST'])
 def login_api(request):
 
@@ -934,6 +939,128 @@ def logout_api(request):
     return Response({"message": "Logout successful (client should delete token)"})
 
 
+
+# ✅ FEEDBACK CRUD VIEWS
+class FeedbackAPIView(APIView):
+
+    # List all feedback of a specific Excel
+    def get(self, request, pk):
+        try:
+            excel = SpatialJoinResult.objects.get(pk=pk)
+        except SpatialJoinResult.DoesNotExist:
+            return Response(
+                {"error": "Excel not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = FeedbackSerializer(excel.feedbacks.all(), many=True)
+        return Response(serializer.data)
+
+    # Create feedback for a specific Excel
+    def post(self, request, pk):
+        try:
+            excel = SpatialJoinResult.objects.get(pk=pk)
+        except SpatialJoinResult.DoesNotExist:
+            return Response(
+                {"error": "Excel not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = FeedbackSerializer(data=request.data)
+
+        if serializer.is_valid():
+            serializer.save(result_excel=excel)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class FeedbackDetailAPIView(APIView):
+    authentication_classes = [SessionAuthentication]
+
+    def get_object(self, pk):
+        try:
+            return Feedback.objects.get(pk=pk)
+        except Feedback.DoesNotExist:
+            return None
+
+    # Retrieve
+    def get(self, request, pk):
+        feedback = self.get_object(pk)
+
+        if not feedback:
+            return Response(
+                {"error": "Feedback not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = FeedbackSerializer(feedback)
+        return Response(serializer.data)
+
+    # Update
+    def put(self, request, pk):
+        feedback = self.get_object(pk)
+
+        if not feedback:
+            return Response(
+                {"error": "Feedback not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = FeedbackSerializer(feedback, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save(result_excel=feedback.result_excel)
+            return Response(serializer.data)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # # Partial Update
+    # def patch(self, request, pk):
+    #     feedback = self.get_object(pk)
+
+    #     if not feedback:
+    #         return Response(
+    #             {"error": "Feedback not found"},
+    #             status=status.HTTP_404_NOT_FOUND
+    #         )
+
+    #     serializer = FeedbackSerializer(
+    #         feedback,
+    #         data=request.data,
+    #         partial=True
+    #     )
+
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data)
+
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # Delete
+    def delete(self, request, pk):
+        if not request.user.is_authenticated or not request.user.is_superuser:
+            return Response({"error": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
+        feedback = self.get_object(pk)
+
+        if not feedback:
+            return Response(
+                {"error": "Feedback not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        feedback.delete()
+
+        return Response(
+            {"message": "Feedback deleted successfully"},
+            status=status.HTTP_204_NO_CONTENT
+        )
+class AllFeedbackAPIView(APIView):
+
+    def get(self, request):
+        feedbacks = Feedback.objects.select_related("result_excel").order_by("-created_at")
+
+        serializer = FeedbackSerializer(feedbacks, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 def logout_view(request):
     """Handle HTML form logout and redirect to login page"""
     if request.user.is_authenticated:
@@ -942,19 +1069,15 @@ def logout_view(request):
     return redirect('login')
 
 
-
-
 @csrf_exempt
 @api_view(['GET'])
 def list_excel_files(request):
-    results = [
-        result
-        for result in SpatialJoinResult.objects.all().order_by('-created_at')
-        if result.result_excel and result.result_excel.storage.exists(result.result_excel.name)
-    ]
+    results = SpatialJoinResult.objects.all().order_by('-created_at')
+    print("Total records:", results.count())
     serializer = SpatialJoinResultSerializer(results, many=True, context={'request': request})
     return Response(serializer.data)
 
+@csrf_exempt
 def login_page(request):
     if request.user.is_authenticated:
         return redirect('upload') 
@@ -1223,4 +1346,245 @@ def get_footprint_image(request):
         import traceback
         print(traceback.format_exc())
         return JsonResponse({"error": str(e)}, status=500)
+
+
+@user_passes_test(lambda u: u.is_superuser, login_url='/login/')
+def feedback_dashboard_view(request):
+    """
+    Renders the feedback dashboard for superusers.
+    """
+    feedbacks = Feedback.objects.all().select_related('result_excel').order_by('-created_at')
+    
+    total_feedbacks = feedbacks.count()
+    unique_excels = feedbacks.exclude(result_excel=None).values('result_excel').distinct().count()
+    
+    latest_feedback = feedbacks.first()
+    latest_time = latest_feedback.created_at if latest_feedback else None
+
+    context = {
+        'feedbacks': feedbacks,
+        'total_feedbacks': total_feedbacks,
+        'unique_excels': unique_excels,
+        'latest_time': latest_time,
+    }
+    return render(request, 'feedback_dashboard.html', context)
+
+
+class UserListCreateAPIView(APIView):
+    """
+    API endpoint to list and create users.
+    """
+    def get(self, request):
+        users = User.objects.all().order_by('-date_joined')
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            password = request.data.get('password')
+            if not password:
+                return Response({"password": ["This field is required."]}, status=status.HTTP_400_BAD_REQUEST)
+            user = User.objects.create_user(
+                username=serializer.validated_data['username'],
+                email=serializer.validated_data.get('email', ''),
+                password=password,
+                is_superuser=serializer.validated_data.get('is_superuser', False),
+                is_staff=serializer.validated_data.get('is_staff', False)
+            )
+            return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserDetailAPIView(APIView):
+    authentication_classes = [SessionAuthentication]
+    """
+    API endpoint to retrieve, update, and delete users.
+    """
+    def get_object(self, pk):
+        try:
+            return User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        user = self.get_object(pk)
+        if not user:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        user = self.get_object(pk)
+        if not user:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            password = request.data.get('password')
+            if password:
+                user.set_password(password)
+            
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        if not request.user.is_authenticated or not request.user.is_superuser:
+            return Response({"error": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
+        user = self.get_object(pk)
+        if not user:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Prevent self deletion
+        if request.user.is_authenticated and request.user.id == user.id:
+            return Response({"error": "You cannot delete your own logged-in user account."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        user.delete()
+        return Response({"message": "User deleted successfully"}, status=status.HTTP_200_OK)
+
+
+@user_passes_test(lambda u: u.is_superuser, login_url='/login/')
+def user_dashboard_view(request):
+    """
+    Renders the User Management Dashboard for superusers.
+    """
+    users = User.objects.all().order_by('-date_joined')
+    total_users = users.count()
+    total_superusers = users.filter(is_superuser=True).count()
+    total_staff = users.filter(is_staff=True).count()
+
+    context = {
+        'users': users,
+        'total_users': total_users,
+        'total_superusers': total_superusers,
+        'total_staff': total_staff,
+    }
+    return render(request, 'user_dashboard.html', context)
+
+
+@user_passes_test(lambda u: u.is_superuser, login_url='/login/')
+def admin_dashboard_view(request):
+    """
+    Renders the Admin Dashboard for superusers, showing ChangeResult, SpatialJoinResult, and Feedback.
+    """
+    change_results = ChangeResult.objects.all().select_related('user').order_by('-created_at')
+    spatial_joins = SpatialJoinResult.objects.all().select_related('user').order_by('-created_at')
+    feedbacks = Feedback.objects.all().select_related('result_excel', 'result_excel__user').order_by('-created_at')
+    
+    total_change = change_results.count()
+    total_spatial = spatial_joins.count()
+    total_feedbacks = feedbacks.count()
+    
+    context = {
+        'change_results': change_results,
+        'spatial_joins': spatial_joins,
+        'feedbacks': feedbacks,
+        'total_change': total_change,
+        'total_spatial': total_spatial,
+        'total_feedbacks': total_feedbacks,
+    }
+    return render(request, 'admin_dashboard.html', context)
+
+
+class ChangeResultDetailAPIView(APIView):
+    authentication_classes = [SessionAuthentication]
+    def delete(self, request, pk):
+        if not request.user.is_authenticated or not request.user.is_superuser:
+            return Response({"error": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            obj = ChangeResult.objects.get(pk=pk)
+            obj.delete()
+            return Response({"message": "Change detection job deleted successfully"}, status=status.HTTP_200_OK)
+        except ChangeResult.DoesNotExist:
+            return Response({"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class SpatialJoinResultDetailAPIView(APIView):
+    authentication_classes = [SessionAuthentication]
+    def delete(self, request, pk):
+        if not request.user.is_authenticated or not request.user.is_superuser:
+            return Response({"error": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            obj = SpatialJoinResult.objects.get(pk=pk)
+            obj.delete()
+            return Response({"message": "Spatial join result deleted successfully"}, status=status.HTTP_200_OK)
+        except SpatialJoinResult.DoesNotExist:
+            return Response({"error": "Result not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@user_passes_test(lambda u: u.is_superuser, login_url='/login/')
+def feedback_detail_view(request, feedback_id):
+    """
+    Renders a detailed view of a single feedback message.
+    """
+    try:
+        feedback = Feedback.objects.select_related('result_excel', 'result_excel__user').get(id=feedback_id)
+    except Feedback.DoesNotExist:
+        return HttpResponse("Feedback not found", status=404)
+    
+    return render(request, 'feedback_detail.html', {'feedback': feedback})
+
+
+@user_passes_test(lambda u: u.is_superuser, login_url='/login/')
+def view_excel_sheet(request):
+    """
+    Renders the Excel sheet contents as a table, highlighting the specified plot_id in red.
+    """
+    excel_file = request.GET.get('file')
+    highlight_plot_id = request.GET.get('highlight_plot_id')
+    
+    file_path = resolve_media_file_path(excel_file)
+    if not file_path or not os.path.exists(file_path):
+        return HttpResponse("Excel file not found", status=404)
+        
+    try:
+        xl = pd.ExcelFile(file_path)
+        sheet_name = 'All Data' if 'All Data' in xl.sheet_names else xl.sheet_names[0]
+        df = xl.parse(sheet_name)
+        
+        df = df.fillna('')
+        columns = [str(col) for col in df.columns]
+        
+        # Identify case-insensitive column representing Plot ID
+        plot_col_idx = -1
+        for idx, col in enumerate(columns):
+            if col.strip().lower() in ['plot id', 'plot_id', 'plotid', 'id']:
+                plot_col_idx = idx
+                break
+        formatted_rows = []
+        for index, row in df.iterrows():
+            row_vals = [str(val) for val in row.values]
+            highlight = False
+            if highlight_plot_id and plot_col_idx != -1:
+                val = str(row.values[plot_col_idx]).strip()
+                if val.endswith('.0'):
+                    val = val[:-2]
+                target_id = str(highlight_plot_id).strip()
+                if target_id.endswith('.0'):
+                    target_id = target_id[:-2]
+                if val == target_id:
+                    highlight = True
+            formatted_rows.append({
+                'values': row_vals,
+                'highlight': highlight
+            })
+        context = {
+            'file_name': os.path.basename(file_path),
+            'excel_file': excel_file,
+            'columns': columns,
+            'rows': formatted_rows,
+            'highlight_plot_id': highlight_plot_id,
+        }
+        return render(request, 'excel_viewer.html', context)
+    except Exception as e:
+        import traceback
+        print(f"Excel viewer error: {traceback.format_exc()}")
+        return HttpResponse(f"Error loading Excel sheet: {str(e)}", status=500)
+
+
+
+
+
+
     

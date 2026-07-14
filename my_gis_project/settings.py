@@ -99,9 +99,9 @@ FILE_UPLOAD_TEMP_DIR = os.path.join(BASE_DIR, 'temp_uploads')
 os.makedirs(FILE_UPLOAD_TEMP_DIR, exist_ok=True)
 
 # media
-MEDIA_ROOT = "/home/rahul/data"
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = "/media/"
-CHUNKED_UPLOAD_MAX_BYTES = 20 * 1024 * 1024 * 1024  # 20GB
+CHUNKED_UPLOAD_MAX_BYTES = 50 * 1024 * 1024 * 1024  # 50GB
 CHUNKED_UPLOAD_EXPIRATION_DELTA = 3600  # 1 hour
 
 # REST Framework
@@ -113,7 +113,7 @@ REST_FRAMEWORK = {
 
 # JWT Settings
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=10),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=15),
 }
 
 # Celery Configuration
@@ -137,8 +137,10 @@ CELERY_TASK_STORE_EAGER_RESULT = True
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = os.getenv('CELERY_BROKER_CONNECTION_RETRY', 'False').lower() == 'true'
 
 # Task timeout settings (30 minutes for large images)
-CELERY_TASK_TIME_LIMIT = 1800
-CELERY_TASK_SOFT_TIME_LIMIT = 1700
+# CELERY_TASK_TIME_LIMIT = 1800
+# CELERY_TASK_SOFT_TIME_LIMIT = 1700
+CELERY_TASK_TIME_LIMIT = 14400
+CELERY_TASK_SOFT_TIME_LIMIT = 14000
 
 
 

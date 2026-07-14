@@ -86,7 +86,24 @@ class SpatialJoinResult(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Spatial Join Result - {self.user.username}"
+        return f"Spatial Join Result - {self.user.id}"
+
+
+class Feedback(models.Model):
+    result_excel = models.ForeignKey(
+        SpatialJoinResult,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="feedbacks"
+    )
+    plot_id = models.CharField(max_length=100, blank=True, null=True)
+    feedback_message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.plot_id} - {self.result_excel.id if self.result_excel else 'No Excel'}"
+
 
 
 

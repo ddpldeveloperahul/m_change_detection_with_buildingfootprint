@@ -14,3 +14,8 @@ class SpatialJoinResultAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at',)
 
 
+@admin.register(Feedback)
+class FeedbackAdmin(admin.ModelAdmin):
+    list_display = ("id","result_excel","feedback_message")    
+
+

@@ -1,7 +1,7 @@
 from rest_framework import serializers # type: ignore
 from django.contrib.auth.models import User
 from django.urls import reverse
-from myapp.models import SpatialJoinResult
+from myapp.models import SpatialJoinResult, Feedback
 import cv2
 
 # ✅ SIGNUP SERIALIZER
@@ -72,6 +72,28 @@ class SpatialJoinResultSerializer(serializers.ModelSerializer):
 
     def get_excel_file(self, obj):
         return obj.result_excel.name
+
+
+class FeedbackSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Feedback
+        fields = [
+            "id",
+            "result_excel",
+            "plot_id",
+            "feedback_message",
+            "created_at"
+        ]
+        read_only_fields = ["id", "created_at", "result_excel"]
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "username", "email", "is_superuser", "is_staff", "date_joined"]
+        read_only_fields = ["id", "date_joined"]
+
     
     
     

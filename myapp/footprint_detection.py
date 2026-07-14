@@ -6,10 +6,14 @@ import numpy as np
 
 from rasterio.windows import Window
 
+# pyrefly: ignore [missing-import]
 from torchvision import transforms
 
+# pyrefly: ignore [missing-import]
 from torchvision.models.detection import maskrcnn_resnet50_fpn
+# pyrefly: ignore [missing-import]
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
+# pyrefly: ignore [missing-import]
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 
 from django.conf import settings
@@ -44,7 +48,7 @@ if MODEL_PATH is None:
         print(f"  - {path}")
     MODEL_PATH = POSSIBLE_PATHS[0]  # Use first path as fallback
 
-CONFIDENCE = 0.35
+CONFIDENCE = 0.70
 TILE_SIZE = 2048
 
 DEVICE = torch.device(

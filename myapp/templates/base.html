@@ -1,6 +1,7 @@
 {% load static %}
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -21,9 +22,11 @@
             0% {
                 background: linear-gradient(135deg, #1f2a44 0%, #0f1927 100%);
             }
+
             50% {
                 background: linear-gradient(135deg, #2d1b4e 0%, #1a0f33 100%);
             }
+
             100% {
                 background: linear-gradient(135deg, #1f2a44 0%, #0f1927 100%);
             }
@@ -33,9 +36,11 @@
             0% {
                 background: linear-gradient(135deg, #2d1b4e 0%, #1a0f33 100%);
             }
+
             50% {
                 background: linear-gradient(135deg, #4a235a 0%, #2c0e3f 100%);
             }
+
             100% {
                 background: linear-gradient(135deg, #2d1b4e 0%, #1a0f33 100%);
             }
@@ -45,9 +50,11 @@
             0% {
                 background: linear-gradient(135deg, #0d47a1 0%, #1a237e 100%);
             }
+
             50% {
                 background: linear-gradient(135deg, #00838f 0%, #004d60 100%);
             }
+
             100% {
                 background: linear-gradient(135deg, #0d47a1 0%, #1a237e 100%);
             }
@@ -57,9 +64,11 @@
             0% {
                 background: linear-gradient(135deg, #00695c 0%, #004d40 100%);
             }
+
             50% {
                 background: linear-gradient(135deg, #006064 0%, #00363a 100%);
             }
+
             100% {
                 background: linear-gradient(135deg, #00695c 0%, #004d40 100%);
             }
@@ -283,7 +292,7 @@
             .navbar-collapse {
                 margin-top: 0.5rem;
             }
-            
+
             .navbar-nav {
                 flex-direction: column;
                 align-items: flex-start !important;
@@ -306,107 +315,110 @@
 
 <body class="dark-theme">
 
-<!-- NAVBAR TOP -->
-<nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container-fluid px-3">
-        <!-- LOGO -->
-        <a class="navbar-brand" href="/">
-            <img src="{% static 'images/logo-DDPL.svg' %}" alt="GIS Tool Logo" class="brand-logo">
-        </a>
+    <!-- NAVBAR TOP -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid px-3">
+            <!-- LOGO -->
+            <a class="navbar-brand" href="/">
+                <img src="{% static 'images/logo-DDPL.svg' %}" alt="GIS Tool Logo" class="brand-logo">
+            </a>
 
-        <!-- TOGGLE BUTTON -->
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+            <!-- TOGGLE BUTTON -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+                aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-        <!-- NAVBAR CONTENT -->
-        <div class="collapse navbar-collapse" id="navbarContent">
-            <!-- LEFT MENU - CENTER -->
-            <ul class="navbar-nav me-auto ms-3">
-                {% if request.user.is_authenticated %}
+            <!-- NAVBAR CONTENT -->
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <!-- LEFT MENU - CENTER -->
+                <ul class="navbar-nav me-auto ms-3">
+                    {% if request.user.is_authenticated %}
                     <li class="nav-item"><a href="{% url 'upload' %}" class="nav-link">Change Detection</a></li>
                     <li class="nav-item"><a href="{% url 'spatial_join' %}" class="nav-link">Spatial Join</a></li>
-                {% else %}
+                    <li class="nav-item"><a href="{% url 'feedback_dashboard' %}" class="nav-link">Dashboard</a></li>
+                    {% else %}
                     <li class="nav-item"><a href="/login/" class="nav-link">Change Detection</a></li>
                     <li class="nav-item"><a href="/login/" class="nav-link">Spatial Join</a></li>
-                {% endif %}
-            </ul>
+                    {% endif %}
+                </ul>
 
-            <!-- RIGHT SIDE - BUTTONS/USER -->
-            <div class="d-flex align-items-center gap-2 ms-auto">
-                <!-- COLOR SWITCHER -->
-                <div class="color-switcher">
-                    <span class="color-label">THEME</span>
-                    <button class="color-btn dark" onclick="changeTheme('dark')" title="Dark Theme"></button>
-                    <button class="color-btn purple" onclick="changeTheme('purple')" title="Purple Theme"></button>
-                    <button class="color-btn cyan" onclick="changeTheme('cyan')" title="Cyan Theme"></button>
-                    <button class="color-btn ocean" onclick="changeTheme('ocean')" title="Ocean Theme"></button>
-                </div>
+                <!-- RIGHT SIDE - BUTTONS/USER -->
+                <div class="d-flex align-items-center gap-2 ms-auto">
+                    <!-- COLOR SWITCHER -->
+                    <div class="color-switcher">
+                        <span class="color-label">THEME</span>
+                        <button class="color-btn dark" onclick="changeTheme('dark')" title="Dark Theme"></button>
+                        <button class="color-btn purple" onclick="changeTheme('purple')" title="Purple Theme"></button>
+                        <button class="color-btn cyan" onclick="changeTheme('cyan')" title="Cyan Theme"></button>
+                        <button class="color-btn ocean" onclick="changeTheme('ocean')" title="Ocean Theme"></button>
+                    </div>
 
-                {% if request.user.is_authenticated %}
+                    {% if request.user.is_authenticated %}
                     <span class="text-white me-2">User: {{ request.user.username }}</span>
                     <form method="post" action="/logout/" style="margin: 0;">
                         {% csrf_token %}
                         <button class="btn btn-danger btn-sm" type="submit">Logout</button>
                     </form>
-                {% else %}
+                    {% else %}
                     <a href="/login/" class="btn btn-outline-light btn-sm">Login</a>
                     {% comment %} <a href="/signup/" class="btn btn-primary btn-sm">Signup</a> {% endcomment %}
-                {% endif %}
+                    {% endif %}
+                </div>
             </div>
         </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="container-fluid" style="margin: 0; padding: 0;">
+        {% block content %}
+        {% endblock %}
     </div>
-</nav>
 
-<!-- MAIN CONTENT -->
-<div class="container-fluid" style="margin: 0; padding: 0;">
-    {% block content %}
-    {% endblock %}
-</div>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- Theme Switcher Script -->
-<script>
-    // Load saved theme
-    window.addEventListener('DOMContentLoaded', function() {
-        const savedTheme = localStorage.getItem('gisTheme') || 'dark';
-        changeTheme(savedTheme);
-    });
-
-    function changeTheme(themeName) {
-        const body = document.body;
-        
-        // Remove all theme classes
-        body.classList.remove('dark-theme', 'purple-theme', 'cyan-theme', 'ocean-theme');
-        
-        // Add new theme class (always add the class, even for dark)
-        body.classList.add(themeName + '-theme');
-        
-        // Save to localStorage
-        localStorage.setItem('gisTheme', themeName);
-        
-        // Visual feedback - highlight active button
-        document.querySelectorAll('.color-btn').forEach(btn => {
-            btn.style.opacity = '0.5';
+    <!-- Theme Switcher Script -->
+    <script>
+        // Load saved theme
+        window.addEventListener('DOMContentLoaded', function () {
+            const savedTheme = localStorage.getItem('gisTheme') || 'dark';
+            changeTheme(savedTheme);
         });
-        
-        // Highlight active button
-        const buttons = document.querySelectorAll('.color-btn');
-        const themeMap = {
-            'dark': 0,
-            'purple': 1,
-            'cyan': 2,
-            'ocean': 3
-        };
-        
-        if (buttons[themeMap[themeName]]) {
-            buttons[themeMap[themeName]].style.opacity = '1';
-            buttons[themeMap[themeName]].style.boxShadow = '0 0 15px rgba(255, 255, 255, 0.8)';
+
+        function changeTheme(themeName) {
+            const body = document.body;
+
+            // Remove all theme classes
+            body.classList.remove('dark-theme', 'purple-theme', 'cyan-theme', 'ocean-theme');
+
+            // Add new theme class (always add the class, even for dark)
+            body.classList.add(themeName + '-theme');
+
+            // Save to localStorage
+            localStorage.setItem('gisTheme', themeName);
+
+            // Visual feedback - highlight active button
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                btn.style.opacity = '0.5';
+            });
+
+            // Highlight active button
+            const buttons = document.querySelectorAll('.color-btn');
+            const themeMap = {
+                'dark': 0,
+                'purple': 1,
+                'cyan': 2,
+                'ocean': 3
+            };
+
+            if (buttons[themeMap[themeName]]) {
+                buttons[themeMap[themeName]].style.opacity = '1';
+                buttons[themeMap[themeName]].style.boxShadow = '0 0 15px rgba(255, 255, 255, 0.8)';
+            }
         }
-    }
-</script>
+    </script>
 
 </body>
+
 </html>

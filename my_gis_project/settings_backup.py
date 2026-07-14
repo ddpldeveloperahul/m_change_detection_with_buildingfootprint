@@ -311,6 +311,16 @@
 # CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = False
 
 
+# media
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# MEDIA_URL = "/media/"
+# CHUNKED_UPLOAD_MAX_BYTES = 50 * 1024 * 1024 * 1024  # 50GB
+# CHUNKED_UPLOAD_EXPIRATION_DELTA = 3600  # 1 hour
+
+
+
+
+
 
 """
 Django settings for my_gis_project project.

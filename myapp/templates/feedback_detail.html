@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+    .detail-page {
+        min-height: calc(100vh - 86px);
+        padding: clamp(16px, 4vw, 48px) clamp(12px, 3vw, 24px);
+        color: #f8fafc;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+    .detail-container {
+        width: 100%;
+        max-width: 800px;
+    }
+
+    .btn-back {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #94a3b8;
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        margin-bottom: 24px;
+    }
+
+    .btn-back:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #f8fafc;
+        transform: translateX(-4px);
+    }
+
+    .detail-card {
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: clamp(20px, 4vw, 36px);
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+    }
+
+    .detail-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding-bottom: 20px;
+        margin-bottom: 28px;
+    }
+
+    .detail-header h1 {
+        font-size: clamp(24px, 3.5vw, 32px);
+        font-weight: 800;
+        background: linear-gradient(135deg, #38bdf8 0%, #34d399 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0 0 6px 0;
+    }
+
+    .detail-header p {
+        color: #94a3b8;
+        margin: 0;
+        font-size: 14px;
+    }
+
+    .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 32px;
+    }
+
+    .meta-item {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 16px;
+        border-radius: 16px;
+    }
+
+    .meta-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #64748b;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+    }
+
+    .meta-value {
+        font-size: 15px;
+        font-weight: 600;
+        color: #e2e8f0;
+    }
+
+    .username-chip {
+        background: rgba(56, 189, 248, 0.1);
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        color: #38bdf8;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-size: 13px;
+    }
+
+    .excel-link {
+        color: #34d399;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .excel-link:hover {
+        text-decoration: underline;
+    }
+
+    .message-container {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        padding: 24px;
+        min-height: 200px;
+        white-space: pre-line;
+        line-height: 1.6;
+        color: #cbd5e1;
+        font-size: 15px;
+        box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+</style>
+
+<div class="detail-page">
+    <div class="detail-container">
+        
+        <!-- Back Link -->
+        <a href="javascript:history.back()" class="btn-back">
+            <span>←</span> Back
+        </a>
+
+        <!-- Detail Card -->
+        <div class="detail-card">
+            
+            <div class="detail-header">
+                <h1>Feedback Detail</h1>
+                <p>Viewing complete feedback message submitted by user.</p>
+            </div>
+
+            <!-- Meta Data Grid -->
+            <div class="meta-grid">
+                <div class="meta-item">
+                    <div class="meta-label">Feedback ID</div>
+                    <div class="meta-value" style="color: #94a3b8;">#{{ feedback.id }}</div>
+                </div>
+
+                <div class="meta-item">
+                    <div class="meta-label">Plot ID</div>
+                    <div class="meta-value" style="color: #38bdf8; font-weight: 700;">
+                        {{ feedback.plot_id|default:"N/A" }}
+                    </div>
+                </div>
+
+                <div class="meta-item">
+                    <div class="meta-label">Submitted By</div>
+                    <div class="meta-value">
+                        <span class="username-chip">
+                            {{ feedback.result_excel.user.username|default:"System" }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="meta-item">
+                    <div class="meta-label">Linked Excel File</div>
+                    <div class="meta-value">
+                        {% if feedback.result_excel %}
+                            <a href="{% url 'view_excel' %}?file={{ feedback.result_excel.result_excel.name }}&highlight_plot_id={{ feedback.plot_id }}" class="excel-link" target="_blank">
+                                📊 Excel #{{ feedback.result_excel.id }} (View)
+                            </a>
+                        {% else %}
+                            <span style="color: #64748b; font-style: italic;">No Excel Link</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="meta-item" style="grid-column: span 2;">
+                    <div class="meta-label">Submitted At</div>
+                    <div class="meta-value" style="color: #94a3b8;">
+                        {{ feedback.created_at|date:"d M Y, H:i:s" }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full Message Body -->
+            <div class="meta-label" style="margin-bottom: 10px;">Feedback Message</div>
+            <div class="message-container">
+                {{ feedback.feedback_message }}
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
