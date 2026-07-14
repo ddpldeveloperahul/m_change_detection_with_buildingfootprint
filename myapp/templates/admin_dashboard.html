@@ -724,12 +724,10 @@
                                     <td>
                                         <div style="display: flex; flex-direction: column; gap: 4px;">
                                             {% if item.uploaded_2023 %}
-                                            <span class="file-tag" title="{{ item.uploaded_2023.name }}">2023: {{
-                                                item.uploaded_2023.name|cut:"uploads/" }}</span>
+                                            <span class="file-tag" title="{{ item.uploaded_2023.name }}">2023: {{ item.uploaded_2023.name|cut:"uploads/" }}</span>
                                             {% endif %}
                                             {% if item.uploaded_2025 %}
-                                            <span class="file-tag" title="{{ item.uploaded_2025.name }}">2025: {{
-                                                item.uploaded_2025.name|cut:"uploads/" }}</span>
+                                            <span class="file-tag" title="{{ item.uploaded_2025.name }}">2025: {{ item.uploaded_2025.name|cut:"uploads/" }}</span>
                                             {% endif %}
                                         </div>
                                     </td>
@@ -749,8 +747,7 @@
                                             {% endif %}
                                         </div>
                                     </td>
-                                    <td style="color: #64748b; font-size: 13px;">{{ item.created_at|date:"d M Y, H:i:s"
-                                        }}</td>
+                                    <td style="color: #64748b; font-size: 13px;">{{ item.created_at|date:"d M Y, H:i:s" }}</td>
                                     <td style="text-align: center;">
                                         <button onclick="deleteChangeJob({{ item.id }})" class="btn-delete">
                                             🗑️ Delete
@@ -803,16 +800,14 @@
                                     <td><span class="username-chip">{{ item.user.username }}</span></td>
                                     <td>
                                         {% if item.main_shapefile %}
-                                        <span class="file-tag" title="{{ item.main_shapefile.name }}">{{
-                                            item.main_shapefile.name|cut:"shapefiles/" }}</span>
+                                        <span class="file-tag" title="{{ item.main_shapefile.name }}">{{ item.main_shapefile.name|cut:"shapefiles/" }}</span>
                                         {% else %}
                                         <span style="color: #64748b; font-style: italic;">None</span>
                                         {% endif %}
                                     </td>
                                     <td>
                                         {% if item.change_shapefile %}
-                                        <span class="file-tag" title="{{ item.change_shapefile.name }}">{{
-                                            item.change_shapefile.name|cut:"shapefiles/" }}</span>
+                                        <span class="file-tag" title="{{ item.change_shapefile.name }}">{{ item.change_shapefile.name|cut:"shapefiles/" }}</span>
                                         {% else %}
                                         <span style="color: #64748b; font-style: italic;">None</span>
                                         {% endif %}
@@ -829,8 +824,7 @@
                                             {% endif %}
                                         </div>
                                     </td>
-                                    <td style="color: #64748b; font-size: 13px;">{{ item.created_at|date:"d M Y, H:i:s"
-                                        }}</td>
+                                    <td style="color: #64748b; font-size: 13px;">{{ item.created_at|date:"d M Y, H:i:s" }}</td>
                                     <td style="text-align: center;">
                                         <button onclick="deleteSpatialResult({{ item.id }})" class="btn-delete">
                                             🗑️ Delete
@@ -881,8 +875,7 @@
                                 <tr id="feedback-row-{{ item.id }}" class="feedback-row">
                                     <td><strong style="color: #64748b;">#{{ item.id }}</strong></td>
                                     <td><strong style="color: #38bdf8;">{{ item.plot_id }}</strong></td>
-                                    <td><span class="username-chip">{{ item.result_excel.user.username|default:"System"
-                                            }}</span></td>
+                                    <td><span class="username-chip">{{ item.result_excel.user.username|default:"System" }}</span></td>
                                     <td>
                                         {% if item.result_excel %}
                                         <a href="{% url 'view_excel' %}?file={{ item.result_excel.result_excel.name }}&highlight_plot_id={{ item.plot_id }}"
@@ -902,8 +895,7 @@
                                             👁️ View Full Message
                                         </a>
                                     </td>
-                                    <td style="color: #64748b; font-size: 13px;">{{ item.created_at|date:"d M Y, H:i:s"
-                                        }}</td>
+                                    <td style="color: #64748b; font-size: 13px;">{{ item.created_at|date:"d M Y, H:i:s" }}</td>
                                     <td style="text-align: center;">
                                         <button onclick="deleteFeedbackMessage({{ item.id }})" class="btn-delete">
                                             🗑️ Delete
