@@ -335,8 +335,15 @@
     }
 
     @keyframes fadeInTab {
-        from { opacity: 0; transform: translateY(8px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     /* Search and Table Box */
@@ -571,6 +578,7 @@
         .dashboard-layout {
             flex-direction: column;
         }
+
         .dashboard-sidebar {
             width: 100%;
             flex: none;
@@ -583,14 +591,14 @@
 
 <div class="dashboard-page">
     <div class="dashboard-layout">
-        
+
         <!-- Left Glassmorphic Sidebar -->
         <aside class="dashboard-sidebar">
             <div class="sidebar-brand">
                 <span class="brand-emoji">🗺️</span>
                 <h3>GIS Portal</h3>
             </div>
-            
+
             <nav class="sidebar-nav">
                 <a href="{% url 'feedback_dashboard' %}" class="nav-item">
                     <span class="nav-icon">📊</span>
@@ -604,16 +612,16 @@
                     <span class="nav-icon">📊</span>
                     Spatial Join
                 </a>
-                <a href="{% url 'admin_dashboard' %}" class="nav-item active">
+                <!-- <a href="{% url 'admin_dashboard' %}" class="nav-item active">
                     <span class="nav-icon">⚙️</span>
                     Data Management
-                </a>
+                </a> -->
                 <a href="{% url 'user_dashboard' %}" class="nav-item">
                     <span class="nav-icon">👥</span>
                     All Users
                 </a>
             </nav>
-            
+
             <div class="sidebar-footer">
                 <a href="{% url 'logout' %}" class="logout-link">
                     <span class="nav-icon">🚪</span>
@@ -624,7 +632,7 @@
 
         <!-- Right Main Content Area -->
         <main class="dashboard-content-area">
-            
+
             <!-- Header Card -->
             <div class="dashboard-header-card d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div class="dashboard-title-box">
@@ -632,7 +640,8 @@
                     <p>Observe and manage GIS application records across all modules.</p>
                 </div>
                 <div>
-                    <a href="/admin/" class="btn btn-outline-light" target="_blank" style="border-radius: 12px; font-weight: 600; padding: 10px 20px; font-size: 14px;">
+                    <a href="/admin/" class="btn btn-outline-light" target="_blank"
+                        style="border-radius: 12px; font-weight: 600; padding: 10px 20px; font-size: 14px;">
                         ⚙️ Open Django Native Admin
                     </a>
                 </div>
@@ -647,7 +656,7 @@
                         <p class="metric-value" id="count-change">{{ total_change }}</p>
                     </div>
                 </div>
-                
+
                 <div class="metric-card" onclick="activateTab('tab-spatial')">
                     <div class="metric-icon icon-purple">📊</div>
                     <div class="metric-info">
@@ -674,16 +683,17 @@
 
             <!-- Tab Contents Container -->
             <div class="content-box">
-                
+
                 <!-- TAB 1: CHANGE DETECTION -->
                 <div id="tab-change" class="tab-content active">
                     <div class="search-filter-bar">
                         <div class="search-input-wrapper">
                             <span class="search-icon">🔍</span>
-                            <input type="text" id="searchChange" class="search-input" placeholder="Search by ID, Username, Status, or File Names...">
+                            <input type="text" id="searchChange" class="search-input"
+                                placeholder="Search by ID, Username, Status, or File Names...">
                         </div>
                     </div>
-                    
+
                     <div class="table-container">
                         <table class="custom-table" id="changeTable">
                             <thead>
@@ -704,37 +714,43 @@
                                     <td><span class="username-chip">{{ item.user.username }}</span></td>
                                     <td>
                                         {% if item.status == 'completed' %}
-                                            <span class="status-badge badge-completed">Completed</span>
+                                        <span class="status-badge badge-completed">Completed</span>
                                         {% elif item.status == 'failed' %}
-                                            <span class="status-badge badge-failed">Failed</span>
+                                        <span class="status-badge badge-failed">Failed</span>
                                         {% else %}
-                                            <span class="status-badge badge-pending">{{ item.status }}</span>
+                                        <span class="status-badge badge-pending">{{ item.status }}</span>
                                         {% endif %}
                                     </td>
                                     <td>
                                         <div style="display: flex; flex-direction: column; gap: 4px;">
                                             {% if item.uploaded_2023 %}
-                                                <span class="file-tag" title="{{ item.uploaded_2023.name }}">2023: {{ item.uploaded_2023.name|cut:"uploads/" }}</span>
+                                            <span class="file-tag" title="{{ item.uploaded_2023.name }}">2023: {{
+                                                item.uploaded_2023.name|cut:"uploads/" }}</span>
                                             {% endif %}
                                             {% if item.uploaded_2025 %}
-                                                <span class="file-tag" title="{{ item.uploaded_2025.name }}">2025: {{ item.uploaded_2025.name|cut:"uploads/" }}</span>
+                                            <span class="file-tag" title="{{ item.uploaded_2025.name }}">2025: {{
+                                                item.uploaded_2025.name|cut:"uploads/" }}</span>
                                             {% endif %}
                                         </div>
                                     </td>
                                     <td>
                                         <div style="display: flex; flex-direction: column; gap: 4px;">
                                             {% if item.result_png %}
-                                                <a href="{{ item.result_png.url }}" class="btn-download" target="_blank">📥 PNG</a>
+                                            <a href="{{ item.result_png.url }}" class="btn-download" target="_blank">📥
+                                                PNG</a>
                                             {% endif %}
                                             {% if item.result_tif %}
-                                                <a href="{{ item.result_tif.url }}" class="btn-download" target="_blank">📥 TIF</a>
+                                            <a href="{{ item.result_tif.url }}" class="btn-download" target="_blank">📥
+                                                TIF</a>
                                             {% endif %}
                                             {% if item.result_shp %}
-                                                <a href="{% url 'download_shapefile' %}?file={{ item.result_shp.name }}" class="btn-download" target="_blank">📥 Shapefile</a>
+                                            <a href="{% url 'download_shapefile' %}?file={{ item.result_shp.name }}"
+                                                class="btn-download" target="_blank">📥 Shapefile</a>
                                             {% endif %}
                                         </div>
                                     </td>
-                                    <td style="color: #64748b; font-size: 13px;">{{ item.created_at|date:"d M Y, H:i:s" }}</td>
+                                    <td style="color: #64748b; font-size: 13px;">{{ item.created_at|date:"d M Y, H:i:s"
+                                        }}</td>
                                     <td style="text-align: center;">
                                         <button onclick="deleteChangeJob({{ item.id }})" class="btn-delete">
                                             🗑️ Delete
@@ -762,10 +778,11 @@
                     <div class="search-filter-bar">
                         <div class="search-input-wrapper">
                             <span class="search-icon">🔍</span>
-                            <input type="text" id="searchSpatial" class="search-input" placeholder="Search by ID, Username, or File Names...">
+                            <input type="text" id="searchSpatial" class="search-input"
+                                placeholder="Search by ID, Username, or File Names...">
                         </div>
                     </div>
-                    
+
                     <div class="table-container">
                         <table class="custom-table" id="spatialTable">
                             <thead>
@@ -786,29 +803,34 @@
                                     <td><span class="username-chip">{{ item.user.username }}</span></td>
                                     <td>
                                         {% if item.main_shapefile %}
-                                            <span class="file-tag" title="{{ item.main_shapefile.name }}">{{ item.main_shapefile.name|cut:"shapefiles/" }}</span>
+                                        <span class="file-tag" title="{{ item.main_shapefile.name }}">{{
+                                            item.main_shapefile.name|cut:"shapefiles/" }}</span>
                                         {% else %}
-                                            <span style="color: #64748b; font-style: italic;">None</span>
+                                        <span style="color: #64748b; font-style: italic;">None</span>
                                         {% endif %}
                                     </td>
                                     <td>
                                         {% if item.change_shapefile %}
-                                            <span class="file-tag" title="{{ item.change_shapefile.name }}">{{ item.change_shapefile.name|cut:"shapefiles/" }}</span>
+                                        <span class="file-tag" title="{{ item.change_shapefile.name }}">{{
+                                            item.change_shapefile.name|cut:"shapefiles/" }}</span>
                                         {% else %}
-                                            <span style="color: #64748b; font-style: italic;">None</span>
+                                        <span style="color: #64748b; font-style: italic;">None</span>
                                         {% endif %}
                                     </td>
                                     <td>
                                         <div style="display: flex; flex-direction: column; gap: 4px;">
                                             {% if item.result_shapefile %}
-                                                <a href="{% url 'download_shapefile' %}?file={{ item.result_shapefile.name }}" class="btn-download" target="_blank">📥 Shapefile</a>
+                                            <a href="{% url 'download_shapefile' %}?file={{ item.result_shapefile.name }}"
+                                                class="btn-download" target="_blank">📥 Shapefile</a>
                                             {% endif %}
                                             {% if item.result_excel %}
-                                                <a href="{% url 'download_excel' %}?file={{ item.result_excel.name }}" class="btn-download" target="_blank">📥 Excel</a>
+                                            <a href="{% url 'download_excel' %}?file={{ item.result_excel.name }}"
+                                                class="btn-download" target="_blank">📥 Excel</a>
                                             {% endif %}
                                         </div>
                                     </td>
-                                    <td style="color: #64748b; font-size: 13px;">{{ item.created_at|date:"d M Y, H:i:s" }}</td>
+                                    <td style="color: #64748b; font-size: 13px;">{{ item.created_at|date:"d M Y, H:i:s"
+                                        }}</td>
                                     <td style="text-align: center;">
                                         <button onclick="deleteSpatialResult({{ item.id }})" class="btn-delete">
                                             🗑️ Delete
@@ -836,10 +858,11 @@
                     <div class="search-filter-bar">
                         <div class="search-input-wrapper">
                             <span class="search-icon">🔍</span>
-                            <input type="text" id="searchFeedback" class="search-input" placeholder="Search by ID, Plot ID, User, or Message Content...">
+                            <input type="text" id="searchFeedback" class="search-input"
+                                placeholder="Search by ID, Plot ID, User, or Message Content...">
                         </div>
                     </div>
-                    
+
                     <div class="table-container">
                         <table class="custom-table" id="feedbackTable">
                             <thead>
@@ -858,14 +881,17 @@
                                 <tr id="feedback-row-{{ item.id }}" class="feedback-row">
                                     <td><strong style="color: #64748b;">#{{ item.id }}</strong></td>
                                     <td><strong style="color: #38bdf8;">{{ item.plot_id }}</strong></td>
-                                    <td><span class="username-chip">{{ item.result_excel.user.username|default:"System" }}</span></td>
+                                    <td><span class="username-chip">{{ item.result_excel.user.username|default:"System"
+                                            }}</span></td>
                                     <td>
                                         {% if item.result_excel %}
-                                            <a href="{% url 'view_excel' %}?file={{ item.result_excel.result_excel.name }}&highlight_plot_id={{ item.plot_id }}" class="file-tag" title="Click to view Excel sheet" target="_blank" style="color: #38bdf8; text-decoration: none;">
-                                                📂 Excel #{{ item.result_excel.id }} (View)
-                                            </a>
+                                        <a href="{% url 'view_excel' %}?file={{ item.result_excel.result_excel.name }}&highlight_plot_id={{ item.plot_id }}"
+                                            class="file-tag" title="Click to view Excel sheet" target="_blank"
+                                            style="color: #38bdf8; text-decoration: none;">
+                                            📂 Excel #{{ item.result_excel.id }} (View)
+                                        </a>
                                         {% else %}
-                                            <span style="color: #64748b; font-style: italic;">No Excel Link</span>
+                                        <span style="color: #64748b; font-style: italic;">No Excel Link</span>
                                         {% endif %}
                                     </td>
                                     <td class="message-cell">
@@ -876,7 +902,8 @@
                                             👁️ View Full Message
                                         </a>
                                     </td>
-                                    <td style="color: #64748b; font-size: 13px;">{{ item.created_at|date:"d M Y, H:i:s" }}</td>
+                                    <td style="color: #64748b; font-size: 13px;">{{ item.created_at|date:"d M Y, H:i:s"
+                                        }}</td>
                                     <td style="text-align: center;">
                                         <button onclick="deleteFeedbackMessage({{ item.id }})" class="btn-delete">
                                             🗑️ Delete
@@ -1006,7 +1033,7 @@
     // 1. Change Detection Search
     const searchChange = document.getElementById('searchChange');
     const changeRows = document.querySelectorAll('.change-row');
-    searchChange.addEventListener('input', function(e) {
+    searchChange.addEventListener('input', function (e) {
         const query = e.target.value.toLowerCase().trim();
         let visibleRows = 0;
 
@@ -1030,7 +1057,7 @@
     // 2. Spatial Join Search
     const searchSpatial = document.getElementById('searchSpatial');
     const spatialRows = document.querySelectorAll('.spatial-row');
-    searchSpatial.addEventListener('input', function(e) {
+    searchSpatial.addEventListener('input', function (e) {
         const query = e.target.value.toLowerCase().trim();
         let visibleRows = 0;
 
@@ -1053,7 +1080,7 @@
     // 3. Feedback Search
     const searchFeedback = document.getElementById('searchFeedback');
     const feedbackRows = document.querySelectorAll('.feedback-row');
-    searchFeedback.addEventListener('input', function(e) {
+    searchFeedback.addEventListener('input', function (e) {
         const query = e.target.value.toLowerCase().trim();
         let visibleRows = 0;
 
