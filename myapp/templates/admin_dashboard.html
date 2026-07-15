@@ -638,7 +638,7 @@
             <!-- Header Card -->
             <div class="dashboard-header-card d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div class="dashboard-title-box">
-                    <h1>Admin Dashboard</h1>
+                    <h1>Admin Dashboard...........</h1>
                     <p>Observe and manage GIS application records across all modules.</p>
                 </div>
                 <div>
@@ -817,12 +817,10 @@
                                     <td>
                                         <div style="display: flex; flex-direction: column; gap: 4px;">
                                             {% if item.result_shapefile %}
-                                            <a href="{% url 'download_shapefile' %}?file={{ item.result_shapefile.name }}"
-                                                class="btn-download" target="_blank">📥 Shapefile</a>
+                                            <a href="{% url 'download_shapefile' %}?file={{ item.result_shapefile.name }}" class="btn-download" target="_blank">📥 Shapefile</a>
                                             {% endif %}
                                             {% if item.result_excel %}
-                                            <a href="{% url 'download_excel' %}?file={{ item.result_excel.name }}"
-                                                class="btn-download" target="_blank">📥 Excel</a>
+                                            <a href="{% url 'download_excel' %}?file={{ item.result_excel.name }}" class="btn-download" target="_blank">📥 Excel</a>
                                             {% endif %}
                                         </div>
                                     </td>
@@ -880,9 +878,7 @@
                                     <td><span class="username-chip">{{ item.result_excel.user.username|default:"System" }}</span></td>
                                     <td>
                                         {% if item.result_excel %}
-                                        <a href="{% url 'view_excel' %}?file={{ item.result_excel.result_excel.name }}&highlight_plot_id={{ item.plot_id }}"
-                                            class="file-tag" title="Click to view Excel sheet" target="_blank"
-                                            style="color: #38bdf8; text-decoration: none;">
+                                        <a href="{% url 'view_excel' %}?file={{ item.result_excel.result_excel.name }}&highlight_plot_id={{ item.plot_id }}" class="file-tag" title="Click to view Excel sheet" target="_blank" style="color: #38bdf8; text-decoration: none;">
                                             📂 Excel #{{ item.result_excel.id }} (View)
                                         </a>
                                         {% else %}
