@@ -78,11 +78,11 @@ class ChangeResult(models.Model):
 class SpatialJoinResult(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    main_shapefile = models.FileField(upload_to='shapefiles/')
-    change_shapefile = models.FileField(upload_to='shapefiles/')
+    main_shapefile = models.FileField(upload_to='shapefiles/', null=True, blank=True)
+    change_shapefile = models.FileField(upload_to='shapefiles/', null=True, blank=True)
 
-    result_shapefile = models.FileField(upload_to='output/')
-    result_excel = models.FileField(upload_to='output/') # ✅ ADD
+    result_shapefile = models.FileField(upload_to='output/', null=True, blank=True)
+    result_excel = models.FileField(upload_to='output/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

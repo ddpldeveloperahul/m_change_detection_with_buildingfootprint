@@ -35,6 +35,7 @@ urlpatterns = [
     path('api/users/', views.UserListCreateAPIView.as_view(), name='user_list_create'),
     path('api/users/<int:pk>/', views.UserDetailAPIView.as_view(), name='user_detail'),
     path('api/excel-files/', views.list_excel_files, name='list_excel_files'),
+    path('api/upload-desktop-results/', views.upload_desktop_results, name='upload_desktop_results'),
     path('feedback-dashboard/', views.feedback_dashboard_view, name='feedback_dashboard'),
     path('user-dashboard/', views.user_dashboard_view, name='user_dashboard'),
     path('admin-dashboard/', views.admin_dashboard_view, name='admin_dashboard'),

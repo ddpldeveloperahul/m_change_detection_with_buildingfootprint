@@ -1583,6 +1583,83 @@ def view_excel_sheet(request):
         return HttpResponse(f"Error loading Excel sheet: {str(e)}", status=500)
 
 
+@csrf_exempt
+@api_view(['POST'])
+def upload_desktop_results(request):
+    """
+    API endpoint for the desktop application to upload the generated Excel sheet 
+    and shapefile ZIP, saving them into the Django database (SpatialJoinResult).
+    """
+    try:
+        user_id = request.data.get('user_id') or request.POST.get('user_id')
+        username = request.data.get('username') or request.POST.get('username')
+        user = None
+        
+        if user_id:
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                pass
+        
+        if not user and username:
+            try:
+                user = User.objects.get(username=username)
+            except User.DoesNotExist:
+                pass
+                
+        if not user and request.user.is_authenticated:
+            user = request.user
+            
+        if not user:
+            # Fallback to first user in the database
+            user = User.objects.first()
+            if not user:
+                # If no users exist, create a default desktop user
+                user = User.objects.create_user(username='desktop_user', password='password123')
+
+        # Get the uploaded files from request
+        result_excel = request.FILES.get('result_excel')
+        result_shapefile = request.FILES.get('result_shapefile')
+        main_shapefile = request.FILES.get('main_shapefile')
+        change_shapefile = request.FILES.get('change_shapefile')
+
+        if not result_excel:
+            return Response(
+                {"error": "result_excel file is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Create SpatialJoinResult object
+        obj = SpatialJoinResult(user=user)
+        
+        if result_excel:
+            obj.result_excel = result_excel
+        if result_shapefile:
+            obj.result_shapefile = result_shapefile
+        if main_shapefile:
+            obj.main_shapefile = main_shapefile
+        if change_shapefile:
+            obj.change_shapefile = change_shapefile
+
+        obj.save()
+
+        # Serialize and return the response
+        serializer = SpatialJoinResultSerializer(obj, context={'request': request})
+        return Response({
+            "message": "Desktop results uploaded successfully",
+            "data": serializer.data
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        import traceback
+        print(f"Error in upload_desktop_results: {traceback.format_exc()}")
+        return Response(
+            {"error": f"Failed to upload results: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+
 
 
 

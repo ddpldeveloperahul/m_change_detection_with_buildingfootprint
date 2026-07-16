@@ -139,9 +139,21 @@
     <div class="detail-container">
         
         <!-- Back Link -->
-        <a href="javascript:history.back()" class="btn-back">
+        <a href="{% if request.user.is_superuser %}{% url 'admin_dashboard' %}{% else %}{% url 'feedback_dashboard' %}{% endif %}" class="btn-back" id="backBtn">
             <span>←</span> Back
         </a>
+
+        <script>
+            document.getElementById('backBtn').addEventListener('click', function(e) {
+                if (window.history.length > 1) {
+                    e.preventDefault();
+                    history.back();
+                } else if (window.opener) {
+                    e.preventDefault();
+                    window.close();
+                }
+            });
+        </script>
 
         <!-- Detail Card -->
         <div class="detail-card">
@@ -196,7 +208,7 @@
             </div>
 
             <!-- Full Message Body -->
-            <div class="meta-label" style="margin-bottom: 10px;">Feedback Message</div>
+            <div class="meta-label" style="margin-bottom: 10px;">Feedback Message..</div>
             <div class="message-container">
                 {{ feedback.feedback_message }}
             </div>

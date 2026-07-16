@@ -889,7 +889,7 @@
                                         <div class="message-wrapper">
                                             {{ item.feedback_message }}
                                         </div>
-                                        <a href="{% url 'feedback_detail' item.id %}" class="btn-view" target="_blank">
+                                        <a href="{% url 'feedback_detail' item.id %}" class="btn-view">
                                             👁️ View Full Message
                                         </a>
                                     </td>
@@ -938,6 +938,9 @@
         // Activate selected button and content
         event.currentTarget.classList.add('active');
         document.getElementById(tabId).classList.add('active');
+
+        // Save active tab
+        sessionStorage.setItem('admin_active_tab', tabId);
     }
 
     function activateTab(tabId) {
@@ -953,6 +956,14 @@
             buttons[buttonIndex].click();
         }
     }
+
+    // Restore active tab on load
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedTab = sessionStorage.getItem('admin_active_tab');
+        if (savedTab) {
+            activateTab(savedTab);
+        }
+    });
 
     // ===== CSRF UTILITY =====
     function getCSRF() {

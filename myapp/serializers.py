@@ -36,7 +36,6 @@ class SignupSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(required=False)
     password = serializers.CharField(write_only=True, required=False)
-
     def validate(self, data):
         errors = {}
 
@@ -53,17 +52,16 @@ class LoginSerializer(serializers.Serializer):
 
         data['username'] = username
         return data
-    
-    
+
 class SpatialJoinResultSerializer(serializers.ModelSerializer):
     excel_url = serializers.SerializerMethodField()
     excel_file = serializers.SerializerMethodField()
-
     class Meta:
         model = SpatialJoinResult
         fields = ['id', 'excel_url', 'excel_file', 'created_at']
-
     def get_excel_url(self, obj):
+        if not obj.result_excel:
+            return ""
         request = self.context.get('request')
         download_url = f"{reverse('download_excel')}?file={obj.result_excel.name}"
         if request:
@@ -71,11 +69,9 @@ class SpatialJoinResultSerializer(serializers.ModelSerializer):
         return download_url
 
     def get_excel_file(self, obj):
-        return obj.result_excel.name
-
+        return obj.result_excel.name if obj.result_excel else ""
 
 class FeedbackSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Feedback
         fields = [
